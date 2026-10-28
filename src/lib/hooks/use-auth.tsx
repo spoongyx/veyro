@@ -1,0 +1,104 @@
+'use client';
+
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@/lib/types';
+
+interface AuthContextValue {
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data }) => {
+      setUser((data.session?.user as User) ?? null);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser((session?.user as User) ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+    });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+    setUser((data.user as User) ?? null);
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+    });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback`,
+    });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, loading, signIn, signUp, signOut, refreshUser, signInWithGoogle, resetPassword }),
+    [user, loading, signIn, signUp, signOut, refreshUser, signInWithGoogle, resetPassword]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

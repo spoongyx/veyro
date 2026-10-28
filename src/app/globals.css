@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme='midnight'] {
+  --ink: 5 7 14;
+  --surface: 9 13 24;
+  --card: 12 17 32;
+  --raised: 18 26 44;
+  --line: 30 42 66;
+  --text: 239 243 252;
+  --muted: 148 163 189;
+  --accent: 76 141 255;
+  --accent-strong: 122 178 255;
+  --accent-contrast: 4 10 22;
+  --accent-soft: 16 31 57;
+  --success: 52 211 153;
+  --warning: 251 191 36;
+  --danger: 248 113 113;
+  --heat-0: 18 26 44;
+  --heat-1: 23 40 72;
+  --heat-2: 31 63 112;
+  --heat-3: 45 90 160;
+  --heat-4: 76 141 255;
+  --heat-5: 152 198 255;
+  --shadow: 0 0 0;
+  --overlay: 3 7 18;
+}
+
+.light,
+[data-theme='light'] {
+  --ink: 247 246 242;
+  --surface: 255 255 255;
+  --card: 255 255 255;
+  --raised: 242 243 240;
+  --line: 226 229 234;
+  --text: 12 20 38;
+  --muted: 91 103 122;
+  --accent: 16 38 74;
+  --accent-strong: 30 64 120;
+  --accent-contrast: 255 255 255;
+  --accent-soft: 234 239 247;
+  --success: 20 122 80;
+  --warning: 168 100 16;
+  --danger: 184 47 55;
+  --heat-0: 239 242 246;
+  --heat-1: 221 230 242;
+  --heat-2: 187 206 231;
+  --heat-3: 129 164 209;
+  --heat-4: 53 100 172;
+  --heat-5: 17 50 105;
+  --shadow: 19 31 53;
+  --overlay: 10 16 30;
+}
+
+html {
+  background-color: rgb(var(--ink));
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-ink text-text antialiased;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 100% -10%, rgb(var(--accent-soft) / 0.7), transparent 62%),
+    radial-gradient(ellipse 55% 45% at -10% 110%, rgb(var(--accent) / 0.07), transparent 62%);
+  background-attachment: fixed;
+  font-feature-settings: 'cv11', 'ss01';
+  min-height: 100dvh;
+}
+
+@layer base {
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  ::selection {
+    background-color: rgb(var(--accent) / 0.22);
+    color: rgb(var(--text));
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--ink)),
+      0 0 0 4px rgb(var(--accent) / 0.55);
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-2xl border border-line bg-card;
+    box-shadow: 0 1px 2px rgb(var(--shadow) / 0.05), 0 18px 44px -28px rgb(var(--shadow) / 0.45);
+  }
+
+  .surface-card-subtle {
+    @apply rounded-2xl border border-line bg-card;
+    box-shadow: 0 1px 2px rgb(var(--shadow) / 0.04), 0 10px 30px -20px rgb(var(--shadow) / 0.35);
+  }
+
+  .surface-glass {
+    background-color: rgb(var(--surface) / 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .hover-lift {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgb(var(--shadow) / 0.06), 0 24px 60px -24px rgb(var(--shadow) / 0.5);
+    border-color: rgb(var(--accent) / 0.22);
+  }
+
+  .skeleton {
+    @apply rounded-lg bg-raised;
+    background-image: linear-gradient(
+      90deg,
+      rgb(var(--raised)) 0%,
+      rgb(var(--line) / 0.7) 45%,
+      rgb(var(--raised)) 90%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  .kbd {
+    @apply inline-flex h-5 items-center rounded border border-line bg-raised px-1.5 text-[10px] font-medium text-muted;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .theme-ready body,
+  .theme-ready .surface-card,
+  .theme-ready .surface-card-subtle,
+  .theme-ready .theme-transition {
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.2s ease,
+      box-shadow 0.3s ease;
+  }
+}
+
+/* Slim scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--line));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
