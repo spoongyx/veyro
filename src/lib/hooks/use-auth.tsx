@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { clearOfflineData } from '@/lib/offline';
+import { authCallbackUrl } from '@/lib/utils/auth-redirect';
 import type { User } from '@/lib/types';
 
 interface AuthContextValue {
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+      options: { emailRedirectTo: authCallbackUrl() },
     });
     if (error) return { error: error.message };
     return { error: null };
@@ -86,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+      options: { redirectTo: authCallbackUrl() },
     });
     if (error) return { error: error.message };
     return { error: null };
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = useCallback(async (email: string) => {
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback`,
+      redirectTo: authCallbackUrl('/auth/reset-password'),
     });
     if (error) return { error: error.message };
     return { error: null };

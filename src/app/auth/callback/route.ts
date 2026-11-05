@@ -19,10 +19,19 @@ function redirect(request: Request, path: string): NextResponse {
   return response;
 }
 
+function safeNext(value: string | null): string {
+  if (!value) return '/app/dashboard';
+  if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
+    return '/app/dashboard';
+  }
+  return value;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const next = safeNext(searchParams.get('next'));
 
   if (error) {
     return redirect(request, `/auth/login?error=${encodeURIComponent(error)}`);
@@ -33,7 +42,7 @@ export async function GET(request: Request) {
     if (exchangeError) {
       return redirect(request, `/auth/login?error=${encodeURIComponent(exchangeError.message)}`);
     }
-    return redirect(request, '/app/dashboard');
+    return redirect(request, next);
   }
 
   return redirect(request, '/auth/login');

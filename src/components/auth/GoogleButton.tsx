@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { authCallbackUrl } from '@/lib/utils/auth-redirect';
 
 export default function GoogleButton({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function GoogleButton({ className }: { className?: string }) {
     const supabase = createClient();
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+      options: { redirectTo: authCallbackUrl() },
     });
     if (err) {
       setError(err.message);

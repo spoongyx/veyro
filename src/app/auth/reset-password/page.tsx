@@ -18,13 +18,22 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient();
     const code = new URLSearchParams(window.location.search).get('code');
-    if (!code) return;
-    void supabase.auth.exchangeCodeForSession(code).then(({ error: exErr }) => {
-      if (exErr) {
-        setError(exErr.message);
+    if (code) {
+      void supabase.auth.exchangeCodeForSession(code).then(({ error: exErr }) => {
+        if (exErr) {
+          setError(exErr.message);
+          return;
+        }
+        setReady(true);
+      });
+      return;
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setReady(true);
         return;
       }
-      setReady(true);
+      setError('This reset link is invalid or has expired.');
     });
   }, []);
 

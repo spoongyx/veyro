@@ -2,6 +2,17 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (
+    pathname === '/' &&
+    (searchParams.has('code') || searchParams.has('error') || searchParams.has('error_description'))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
   let supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,9 +39,9 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
   const isCallbackRoute = pathname.startsWith('/auth/callback');
-  const isAuthRoute = pathname.startsWith('/auth') && !isCallbackRoute;
+  const isResetRoute = pathname.startsWith('/auth/reset-password');
+  const isAuthRoute = pathname.startsWith('/auth') && !isCallbackRoute && !isResetRoute;
   const isAppRoute = pathname.startsWith('/app');
 
   if (!user && isAppRoute) {
@@ -49,5 +60,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/app/:path*', '/auth/:path*'],
+  matcher: ['/', '/app/:path*', '/auth/:path*'],
 };
