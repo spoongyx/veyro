@@ -1,7 +1,37 @@
 // Veyro service worker — offline shell + stale-while-revalidate runtime caching.
-const SHELL_CACHE = 'veyro-shell-v1';
-const RUNTIME_CACHE = 'veyro-runtime-v1';
+// Authenticated routes (/app, /auth) are never cached: caching them would leave
+// private user data readable on a shared device after logout.
+const SHELL_CACHE = 'veyro-shell-v2';
+const RUNTIME_CACHE = 'veyro-runtime-v2';
 const OFFLINE_URL = '/offline';
+const PRIVATE_PREFIXES = ['/app', '/auth'];
+
+function isPrivatePath(pathname) {
+  return PRIVATE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+function isCacheable(request, response) {
+  if (!response || !response.ok) return false;
+  const cacheControl = response.headers.get('Cache-Control') || '';
+  if (/(^|,)\s*(no-store|private)/i.test(cacheControl)) return false;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return false;
+  return !isPrivatePath(url.pathname);
+}
+
+function offlineResponse() {
+  return caches.match(OFFLINE_URL).then(
+    (offline) =>
+      offline ||
+      new Response('Offline', {
+        status: 503,
+        statusText: 'Offline',
+        headers: { 'Content-Type': 'text/plain' },
+      })
+  );
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -16,13 +46,14 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(
+      .then((keys) => {
+        const keep = new Set([SHELL_CACHE, RUNTIME_CACHE]);
+        return Promise.all(
           keys
-            .filter((key) => key.startsWith('veyro-'))
+            .filter((key) => key.startsWith('veyro-') && !keep.has(key))
             .map((key) => caches.delete(key))
-        )
-      )
+        );
+      })
       .then(() => self.clients.claim())
   );
 });
@@ -31,40 +62,42 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
   // Network-first for navigations, falling back to cache/offline page.
   if (request.mode === 'navigate') {
+    if (isPrivatePath(url.pathname)) {
+      event.respondWith(fetch(request).catch(offlineResponse));
+      return;
+    }
+
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+          if (isCacheable(request, response)) {
+            const copy = response.clone();
+            caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+          }
           return response;
         })
         .catch(() =>
-          caches.match(request).then(
-            (cached) =>
-              cached ||
-              caches.match(OFFLINE_URL).then(
-                (offline) =>
-                  offline ||
-                  new Response('Offline', {
-                    status: 503,
-                    statusText: 'Offline',
-                    headers: { 'Content-Type': 'text/plain' },
-                  })
-              )
-          )
+          caches
+            .match(request)
+            .then((cached) => cached || offlineResponse())
         )
     );
     return;
   }
 
-  // Stale-while-revalidate for same-origin GET requests.
+  if (isPrivatePath(url.pathname)) return;
+
+  // Stale-while-revalidate for public same-origin GET requests.
   event.respondWith(
     caches.match(request).then((cached) => {
       const networkFetch = fetch(request)
         .then((response) => {
-          if (response && response.ok && new URL(request.url).origin === self.location.origin) {
+          if (isCacheable(request, response)) {
             const copy = response.clone();
             caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
           }

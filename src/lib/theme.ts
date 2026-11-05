@@ -17,9 +17,9 @@ export const THEME_META: Record<
   },
   midnight: {
     label: 'Midnight',
-    description: 'Deep navy surfaces with electric blue accents.',
-    color: '#05070E',
-    dot: '#4C8DFF',
+    description: 'Deep charcoal surfaces with warm orange accents.',
+    color: '#121212',
+    dot: '#FF8A32',
   },
 };
 

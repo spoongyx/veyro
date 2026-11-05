@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -16,7 +16,7 @@ interface HabitFormModalProps {
 export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitFormModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [color, setColor] = useState('#f5f7fb');
+  const [color, setColor] = useState('#FF8A32');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [targetDays, setTargetDays] = useState(7);
   const [saving, setSaving] = useState(false);
@@ -27,7 +27,7 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
     if (open) {
       setName(habit?.name ?? '');
       setDescription(habit?.description ?? '');
-      setColor(habit?.color ?? '#f5f7fb');
+      setColor(habit?.color ?? '#FF8A32');
       setFrequency(habit?.frequency ?? 'daily');
       setTargetDays(habit?.target_days ?? 7);
       setError(null);
@@ -69,7 +69,7 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
   return (
     <Modal open={open} onClose={onClose} title={habit ? 'Edit habit' : 'New habit'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+        {error && <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>}
         <div>
           <label className="mb-1.5 block text-sm font-medium">Name</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Morning meditation" required autoFocus />
@@ -109,7 +109,7 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
             Cancel
           </Button>
           <Button type="submit" disabled={saving || !name.trim()}>
-            {saving ? 'Saving…' : habit ? 'Save changes' : 'Create habit'}
+            {saving ? 'Saving�' : habit ? 'Save changes' : 'Create habit'}
           </Button>
         </div>
       </form>

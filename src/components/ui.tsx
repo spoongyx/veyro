@@ -40,10 +40,10 @@ const buttonStyles: Record<ButtonVariant, string> = {
   primary:
     'bg-accent text-accent-contrast shadow-soft hover:bg-accent-strong hover:shadow-card active:translate-y-px',
   secondary:
-    'border border-transparent bg-raised text-text hover:border-accent/15 hover:bg-accent-soft active:translate-y-px',
+    'border border-line/70 bg-raised text-text hover:border-accent/25 hover:bg-accent-soft hover:text-accent active:translate-y-px',
   ghost: 'bg-transparent text-text hover:bg-raised active:translate-y-px',
   outline:
-    'border border-line bg-card text-text hover:border-accent/25 hover:bg-raised active:translate-y-px',
+    'border border-line bg-transparent text-text hover:border-accent/30 hover:bg-raised active:translate-y-px',
   danger:
     'border border-danger/25 bg-danger/10 text-danger hover:border-danger/40 hover:bg-danger/15 active:translate-y-px',
 };
@@ -189,7 +189,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-[rgb(3_7_18_/_0.62)] p-0 backdrop-blur-md sm:items-center sm:p-4"
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-[rgb(var(--overlay)/0.68)] p-0 backdrop-blur-md sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
@@ -339,9 +339,9 @@ export function PageHeader({
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">{eyebrow}</p>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-accent/90">{eyebrow}</p>
         ) : null}
-        <h1 className="text-2xl font-bold tracking-[-0.03em] text-text sm:text-3xl">{title}</h1>
+        <h1 className="text-[28px] font-semibold tracking-[-0.045em] text-text sm:text-[34px]">{title}</h1>
         {description ? <div className="mt-2 max-w-2xl text-sm leading-6 text-muted">{description}</div> : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -364,7 +364,7 @@ export function SectionHeading({
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 items-start gap-3">
         {icon ? (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line/60 bg-accent-soft text-accent">
             {icon}
           </div>
         ) : null}
@@ -400,19 +400,49 @@ export function StatCard({
     danger: 'bg-danger/10 text-danger',
   };
   return (
-    <Card className="p-4 sm:p-5" variant="interactive">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{label}</p>
+    <Card className="group relative h-full overflow-hidden p-4 sm:p-5" variant="interactive">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-accent/[0.07] blur-2xl transition-opacity duration-500 group-hover:opacity-80"
+      />
+      <div className="relative flex items-start justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">{label}</p>
         {icon ? (
-          <div className={cn('flex h-8 w-8 items-center justify-center rounded-xl', toneClasses[tone])}>
+          <div
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-xl border border-line/60 transition-transform duration-300 group-hover:scale-105',
+              toneClasses[tone]
+            )}
+          >
             {icon}
           </div>
         ) : null}
       </div>
-      <p className="mt-3 text-2xl font-bold tracking-[-0.04em] text-text sm:text-3xl">{value}</p>
+      <p className="relative mt-3 text-[26px] font-semibold leading-none tracking-[-0.045em] text-text tabular-nums sm:text-[30px]">
+        {value}
+      </p>
       {progress ? <Progress value={progress.value} max={progress.max} tone={tone} className="mt-3" size="sm" /> : null}
-      {sub ? <p className="mt-2 text-xs leading-5 text-muted">{sub}</p> : null}
+      {sub ? <p className="relative mt-2 text-xs leading-5 text-muted">{sub}</p> : null}
     </Card>
+  );
+}
+
+export function Reveal({
+  children,
+  delay = 0,
+  className,
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn('animate-slideUp', className)}
+      style={delay ? { animationDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -445,7 +475,7 @@ export function SegmentedControl({
             className={cn(
               'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all duration-200',
               active
-                ? 'bg-card text-text shadow-soft'
+                ? 'bg-card text-text shadow-soft ring-1 ring-line/70'
                 : 'text-muted hover:bg-card/60 hover:text-text'
             )}
           >
@@ -508,7 +538,7 @@ export function Avatar({ name, email, className }: { name?: string | null; email
   return (
     <span
       className={cn(
-        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-xs font-bold text-accent-contrast',
+        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-contrast',
         className
       )}
       aria-hidden="true"

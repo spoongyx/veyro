@@ -28,8 +28,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth');
-  const isAppRoute = request.nextUrl.pathname.startsWith('/app');
+  const { pathname } = request.nextUrl;
+  const isCallbackRoute = pathname.startsWith('/auth/callback');
+  const isAuthRoute = pathname.startsWith('/auth') && !isCallbackRoute;
+  const isAppRoute = pathname.startsWith('/app');
 
   if (!user && isAppRoute) {
     const url = request.nextUrl.clone();

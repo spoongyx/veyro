@@ -66,15 +66,42 @@ ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE focus_sessions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own tasks" ON tasks;
-CREATE POLICY "Users can manage own tasks" ON tasks FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own tasks" ON tasks
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Users can manage own habits" ON habits;
-CREATE POLICY "Users can manage own habits" ON habits FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own habits" ON habits
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Users can manage own habit_completions" ON habit_completions;
-CREATE POLICY "Users can manage own habit_completions" ON habit_completions FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own habit_completions" ON habit_completions
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (
+    auth.uid() = user_id
+    AND EXISTS (
+      SELECT 1
+      FROM habits
+      WHERE habits.id = habit_completions.habit_id
+        AND habits.user_id = auth.uid()
+    )
+  );
+
 DROP POLICY IF EXISTS "Users can manage own goals" ON goals;
-CREATE POLICY "Users can manage own goals" ON goals FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own goals" ON goals
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Users can manage own focus_sessions" ON focus_sessions;
-CREATE POLICY "Users can manage own focus_sessions" ON focus_sessions FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own focus_sessions" ON focus_sessions
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

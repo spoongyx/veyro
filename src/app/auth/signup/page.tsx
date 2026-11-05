@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Card, Input } from '@/components/ui';
 import GoogleButton from '@/components/auth/GoogleButton';
+import AuthShell from '@/components/auth/AuthShell';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,10 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     setLoading(true);
     setError(null);
     const supabase = createClient();
@@ -34,16 +39,26 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-text">Veyro</Link>
-          <p className="mt-2 text-sm text-muted">Start your productivity journey</p>
-        </div>
+    <AuthShell
+      subtitle="Start your productivity journey."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link href="/auth/login" className="font-medium text-text transition-colors hover:text-accent">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <Card className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+          {error && (
+            <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>
+          )}
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-text">Email</label>
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-text">
+              Email
+            </label>
             <Input
               id="email"
               type="email"
@@ -55,35 +70,33 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-text">Password</label>
+            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-text">
+              Password
+            </label>
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
-              placeholder="Enter your password"
+              minLength={8}
+              placeholder="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" loading={loading}>
             {loading ? 'Creating account...' : 'Create account'}
           </Button>
         </form>
 
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-line" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted">or</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">or</span>
           <div className="h-px flex-1 bg-line" />
         </div>
 
         <GoogleButton />
-
-        <div className="mt-6 text-center text-sm text-muted">
-          <Link href="/auth/login" className="text-text hover:underline">Already have an account? Sign in</Link>
-        </div>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

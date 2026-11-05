@@ -72,6 +72,18 @@ module.exports = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.55' },
         },
+        barRise: {
+          from: { transform: 'scaleY(0)' },
+          to: { transform: 'scaleY(1)' },
+        },
+        heatIn: {
+          from: { opacity: '0', transform: 'scale(0.55)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        drift: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+          '50%': { transform: 'translate3d(0, -10px, 0)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.32s ease-out both',
@@ -79,6 +91,9 @@ module.exports = {
         scaleIn: 'scaleIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both',
         shimmer: 'shimmer 1.8s linear infinite',
         pulseSoft: 'pulseSoft 2.4s ease-in-out infinite',
+        barRise: 'barRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both',
+        heatIn: 'heatIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
+        drift: 'drift 7s ease-in-out infinite',
       },
     },
   },

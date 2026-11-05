@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -85,14 +85,14 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
   return (
     <Modal open={open} onClose={onClose} title={task ? 'Edit task' : 'New task'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+        {error && <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>}
         <div>
           <label className="mb-1.5 block text-sm font-medium">Title</label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" required autoFocus />
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium">Description</label>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Add context, links, notes…" rows={3} />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Add context, links, notes�" rows={3} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -134,7 +134,7 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
             Cancel
           </Button>
           <Button type="submit" disabled={saving || !title.trim()}>
-            {saving ? 'Saving…' : task ? 'Save changes' : 'Create task'}
+            {saving ? 'Saving�' : task ? 'Save changes' : 'Create task'}
           </Button>
         </div>
       </form>

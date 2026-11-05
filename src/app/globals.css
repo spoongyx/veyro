@@ -4,47 +4,47 @@
 
 :root,
 [data-theme='midnight'] {
-  --ink: 5 7 14;
-  --surface: 9 13 24;
-  --card: 12 17 32;
-  --raised: 18 26 44;
-  --line: 30 42 66;
-  --text: 239 243 252;
-  --muted: 148 163 189;
-  --accent: 76 141 255;
-  --accent-strong: 122 178 255;
-  --accent-contrast: 4 10 22;
-  --accent-soft: 16 31 57;
-  --success: 52 211 153;
-  --warning: 251 191 36;
-  --danger: 248 113 113;
-  --heat-0: 18 26 44;
-  --heat-1: 23 40 72;
-  --heat-2: 31 63 112;
-  --heat-3: 45 90 160;
-  --heat-4: 76 141 255;
-  --heat-5: 152 198 255;
+  --ink: 18 18 18;
+  --surface: 22 22 22;
+  --card: 26 26 26;
+  --raised: 34 34 34;
+  --line: 49 48 46;
+  --text: 245 243 239;
+  --muted: 160 156 149;
+  --accent: 255 138 50;
+  --accent-strong: 255 163 92;
+  --accent-contrast: 24 14 4;
+  --accent-soft: 53 32 16;
+  --success: 94 210 138;
+  --warning: 245 191 87;
+  --danger: 244 113 108;
+  --heat-0: 34 34 34;
+  --heat-1: 59 34 17;
+  --heat-2: 112 56 20;
+  --heat-3: 180 86 26;
+  --heat-4: 255 138 50;
+  --heat-5: 255 185 130;
   --shadow: 0 0 0;
-  --overlay: 3 7 18;
+  --overlay: 10 10 10;
 }
 
 .light,
 [data-theme='light'] {
-  --ink: 247 246 242;
+  --ink: 246 244 240;
   --surface: 255 255 255;
   --card: 255 255 255;
-  --raised: 242 243 240;
-  --line: 226 229 234;
-  --text: 12 20 38;
-  --muted: 91 103 122;
+  --raised: 241 239 234;
+  --line: 226 222 214;
+  --text: 24 22 18;
+  --muted: 106 102 95;
   --accent: 16 38 74;
   --accent-strong: 30 64 120;
   --accent-contrast: 255 255 255;
-  --accent-soft: 234 239 247;
+  --accent-soft: 234 238 245;
   --success: 20 122 80;
   --warning: 168 100 16;
   --danger: 184 47 55;
-  --heat-0: 239 242 246;
+  --heat-0: 239 240 243;
   --heat-1: 221 230 242;
   --heat-2: 187 206 231;
   --heat-3: 129 164 209;
@@ -62,8 +62,8 @@ html {
 body {
   @apply bg-ink text-text antialiased;
   background-image:
-    radial-gradient(ellipse 70% 50% at 100% -10%, rgb(var(--accent-soft) / 0.7), transparent 62%),
-    radial-gradient(ellipse 55% 45% at -10% 110%, rgb(var(--accent) / 0.07), transparent 62%);
+    radial-gradient(ellipse 65% 45% at 100% -8%, rgb(var(--accent) / 0.1), transparent 60%),
+    radial-gradient(ellipse 50% 40% at -8% 108%, rgb(var(--accent) / 0.06), transparent 62%);
   background-attachment: fixed;
   font-feature-settings: 'cv11', 'ss01';
   min-height: 100dvh;
@@ -98,12 +98,18 @@ body {
 @layer components {
   .surface-card {
     @apply rounded-2xl border border-line bg-card;
-    box-shadow: 0 1px 2px rgb(var(--shadow) / 0.05), 0 18px 44px -28px rgb(var(--shadow) / 0.45);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--text) / 0.03),
+      0 1px 2px rgb(var(--shadow) / 0.06),
+      0 24px 60px -40px rgb(var(--shadow) / 0.6);
   }
 
   .surface-card-subtle {
     @apply rounded-2xl border border-line bg-card;
-    box-shadow: 0 1px 2px rgb(var(--shadow) / 0.04), 0 10px 30px -20px rgb(var(--shadow) / 0.35);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--text) / 0.03),
+      0 1px 2px rgb(var(--shadow) / 0.04),
+      0 16px 40px -32px rgb(var(--shadow) / 0.55);
   }
 
   .surface-glass {
@@ -116,13 +122,21 @@ body {
     transition:
       transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 2px 6px rgb(var(--shadow) / 0.06), 0 24px 60px -24px rgb(var(--shadow) / 0.5);
-    border-color: rgb(var(--accent) / 0.22);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--text) / 0.04),
+      0 2px 6px rgb(var(--shadow) / 0.08),
+      0 30px 70px -32px rgb(var(--shadow) / 0.7);
+    border-color: rgb(var(--accent) / 0.28);
+  }
+
+  .accent-glow {
+    box-shadow: 0 0 0 1px rgb(var(--accent) / 0.18), 0 20px 60px -24px rgb(var(--accent) / 0.32);
   }
 
   .skeleton {
@@ -165,6 +179,35 @@ body {
       border-color 0.3s ease,
       color 0.2s ease,
       box-shadow 0.3s ease;
+  }
+}
+
+@keyframes chart-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes bar-rise {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes heat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

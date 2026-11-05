@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -75,7 +75,7 @@ export default function GoalFormModal({ open, onClose, goal, onSaved }: GoalForm
   return (
     <Modal open={open} onClose={onClose} title={goal ? 'Edit goal' : 'New goal'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+        {error && <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>}
         <div>
           <label className="mb-1.5 block text-sm font-medium">Title</label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Run a marathon" required autoFocus />
@@ -111,7 +111,7 @@ export default function GoalFormModal({ open, onClose, goal, onSaved }: GoalForm
             Cancel
           </Button>
           <Button type="submit" disabled={saving || !title.trim()}>
-            {saving ? 'Saving…' : goal ? 'Save changes' : 'Create goal'}
+            {saving ? 'Saving�' : goal ? 'Save changes' : 'Create goal'}
           </Button>
         </div>
       </form>

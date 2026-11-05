@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Card, Input } from '@/components/ui';
+import AuthShell from '@/components/auth/AuthShell';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -30,25 +30,37 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-text">Veyro</Link>
-          <p className="mt-2 text-sm text-muted">Reset your password</p>
-        </div>
+    <AuthShell
+      subtitle="Reset your password."
+      footer={
+        <Link href="/auth/login" className="font-medium text-text transition-colors hover:text-accent">
+          Back to sign in
+        </Link>
+      }
+    >
+      <Card className="p-6 sm:p-8">
         {sent ? (
           <div className="space-y-4 text-center">
-            <p className="text-sm text-text">
-              If an account exists for <span className="font-medium">{email}</span>, we&apos;ve sent a password reset link.
+            <p className="text-sm leading-6 text-text">
+              If an account exists for <span className="font-semibold">{email}</span>, we&apos;ve sent a password
+              reset link.
             </p>
-            <p className="text-sm text-muted">Check your inbox and follow the link to choose a new password.</p>
-            <Link href="/auth/login" className="inline-block text-sm font-medium text-text underline">Back to sign in</Link>
+            <p className="text-sm leading-6 text-muted">
+              Check your inbox and follow the link to choose a new password.
+            </p>
+            <Link href="/auth/login" className="inline-block text-sm font-medium text-accent hover:underline">
+              Back to sign in
+            </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+            {error && (
+              <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>
+            )}
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-text">Email</label>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-text">
+                Email
+              </label>
               <Input
                 id="email"
                 type="email"
@@ -59,15 +71,12 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" loading={loading}>
               {loading ? 'Sending reset link...' : 'Send reset link'}
             </Button>
           </form>
         )}
-        <div className="mt-6 text-center text-sm text-muted">
-          <Link href="/auth/login" className="text-text hover:underline">Back to sign in</Link>
-        </div>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

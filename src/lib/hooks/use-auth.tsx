@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { clearOfflineData } from '@/lib/offline';
 import type { User } from '@/lib/types';
 
 interface AuthContextValue {
@@ -62,6 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    clearOfflineData();
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      try {
+        const keys = await window.caches.keys();
+        await Promise.all(
+          keys.filter((key) => key.startsWith('veyro-')).map((key) => window.caches.delete(key))
+        );
+      } catch {
+        // Cache Storage unavailable — nothing to clear.
+      }
+    }
   }, []);
 
   const refreshUser = useCallback(async () => {

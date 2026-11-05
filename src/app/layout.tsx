@@ -4,10 +4,33 @@ import { PwaRegistrar } from '@/components/pwa';
 import { ToastProvider } from '@/components/toast';
 import { ThemeProvider } from '@/lib/hooks/use-theme';
 
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : null;
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? vercelUrl ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: { default: 'Veyro - Focus, simplified', template: '%s - Veyro' },
   description: 'Veyro is a calm productivity workspace for tasks, habits, goals and deep work.',
+  applicationName: 'Veyro',
   manifest: '/manifest.webmanifest',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'Veyro',
+    title: 'Veyro - Focus, simplified',
+    description: 'A calm productivity workspace for tasks, habits, goals and deep work.',
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Veyro - Focus, simplified',
+    description: 'A calm productivity workspace for tasks, habits, goals and deep work.',
+  },
 };
 
 export const viewport: Viewport = {
@@ -20,8 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="description" content="Veyro - a calm productivity workspace" />
-        <meta name="theme-color" content="#05070E" />
+        <meta name="theme-color" content="#121212" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -49,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     root.dataset.theme = theme;
     root.style.colorScheme = theme === 'light' ? 'light' : 'dark';
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F6F2' : '#05070E');
+    if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F6F2' : '#121212');
     requestAnimationFrame(function () { root.classList.add('theme-ready'); });
   } catch (e) {}
 })();

@@ -91,3 +91,14 @@ export function clearCachedData(keys: string[]): void {
   if (typeof window === 'undefined') return;
   keys.forEach((k) => window.localStorage.removeItem(PREFIX + k));
 }
+
+export function clearOfflineData(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith(PREFIX))
+      .forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // Storage unavailable — nothing to clear.
+  }
+}

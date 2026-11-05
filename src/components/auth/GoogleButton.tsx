@@ -23,12 +23,12 @@ export default function GoogleButton({ className }: { className?: string }) {
 
   return (
     <div className={className ? `space-y-3 ${className}` : 'space-y-3'}>
-      {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</div>}
+      {error && <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>}
       <button
         type="button"
         onClick={() => void handleGoogle()}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-medium text-text transition-colors hover:bg-raised disabled:opacity-50 disabled:pointer-events-none"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent/25 hover:bg-raised disabled:pointer-events-none disabled:opacity-50"
       >
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />

@@ -6,7 +6,8 @@ import { useAuth } from '@/lib/hooks/use-auth';
 import { useFocusSessions } from '@/lib/hooks/use-entities';
 import { showAppNotification } from '@/lib/notifications';
 import { focusMinutesSeries, totalFocusMinutes } from '@/lib/utils/analytics';
-import { Button, Card, EmptyState, SectionHeading, StatCard } from '@/components/ui';
+import { cn } from '@/lib/utils/cn';
+import { Card, EmptyState, Reveal, SectionHeading, StatCard } from '@/components/ui';
 import { BarChart } from '@/components/charts';
 
 type Phase = 'work' | 'short_break' | 'long_break';
@@ -113,140 +114,203 @@ export default function FocusPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Today" value={`${focusMinutesToday}m`} sub={`${sessionsToday} sessions`} icon={<Timer size={16} />} tone="accent" />
-        <StatCard label="Sessions" value={completedSessions.length} sub="completed all time" icon={<Timer size={16} />} tone="success" />
-        <StatCard label="Deep work" value={`${Math.round(totalMinutes / 60)}h`} sub="total focused time" icon={<Timer size={16} />} tone="accent" />
-        <StatCard label="This cycle" value={workCount} sub="pomodoros before a long break" icon={<Coffee size={16} />} tone="warning" />
+        <Reveal delay={0}>
+          <StatCard
+            label="Today"
+            value={`${focusMinutesToday}m`}
+            sub={`${sessionsToday} sessions`}
+            icon={<Timer size={16} />}
+            tone="accent"
+          />
+        </Reveal>
+        <Reveal delay={60}>
+          <StatCard
+            label="Sessions"
+            value={completedSessions.length}
+            sub="completed all time"
+            icon={<Timer size={16} />}
+            tone="success"
+          />
+        </Reveal>
+        <Reveal delay={120}>
+          <StatCard
+            label="Deep work"
+            value={`${Math.round(totalMinutes / 60)}h`}
+            sub="total focused time"
+            icon={<Timer size={16} />}
+            tone="accent"
+          />
+        </Reveal>
+        <Reveal delay={180}>
+          <StatCard
+            label="This cycle"
+            value={workCount}
+            sub="pomodoros before a long break"
+            icon={<Coffee size={16} />}
+            tone="warning"
+          />
+        </Reveal>
       </div>
 
-      <Card className="overflow-hidden p-0">
-        <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="relative flex flex-col items-center justify-center px-6 py-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgb(var(--accent)/0.08),transparent_65%)]" />
-            <p className="relative text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">{PHASE_LABEL[phase]}</p>
-            <div className="relative mt-5 h-64 w-64">
-              <svg viewBox="0 0 280 280" className="h-full w-full -rotate-90">
-                <circle cx="140" cy="140" r={radius} fill="none" stroke="rgb(var(--raised))" strokeWidth="10" />
-                <circle
-                  cx="140"
-                  cy="140"
-                  r={radius}
-                  fill="none"
-                  stroke="rgb(var(--accent))"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={dashOffset}
-                  style={{ transition: running ? 'stroke-dashoffset 1s linear' : 'stroke-dashoffset 0.4s ease' }}
+      <Reveal delay={80}>
+        <Card className="overflow-hidden p-0">
+          <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="relative flex flex-col items-center justify-center px-6 py-10">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgb(var(--accent)/0.1),transparent_65%)]"
+              />
+              <div className="relative inline-flex items-center gap-1 rounded-full border border-line/70 bg-raised/50 p-1">
+                {(['work', 'short_break', 'long_break'] as Phase[]).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => switchPhase(value)}
+                    className={cn(
+                      'rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all',
+                      phase === value
+                        ? 'bg-accent text-accent-contrast shadow-soft'
+                        : 'text-muted hover:text-text'
+                    )}
+                  >
+                    {PHASE_LABEL[value]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative mt-5 h-64 w-64">
+                <svg viewBox="0 0 280 280" className="h-full w-full -rotate-90">
+                  <circle cx="140" cy="140" r={radius} fill="none" stroke="rgb(var(--raised))" strokeWidth="10" />
+                  <circle
+                    cx="140"
+                    cy="140"
+                    r={radius}
+                    fill="none"
+                    stroke="rgb(var(--accent))"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    style={{ transition: running ? 'stroke-dashoffset 1s linear' : 'stroke-dashoffset 0.4s ease' }}
+                  />
+                </svg>
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute inset-10 rounded-full bg-accent/[0.06] blur-2xl transition-opacity duration-700',
+                    running ? 'opacity-100' : 'opacity-40'
+                  )}
                 />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-5xl font-bold tabular-nums tracking-[-0.04em] text-text">{formatClock(secondsLeft)}</p>
-                <p className="mt-1.5 text-xs font-medium text-muted">
-                  {Math.round(phaseSeconds / 60)} minute {phase === 'work' ? 'session' : 'break'}
-                </p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <p className="text-5xl font-semibold tabular-nums tracking-[-0.05em] text-text sm:text-[56px]">
+                    {formatClock(secondsLeft)}
+                  </p>
+                  <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+                    {Math.round(phaseSeconds / 60)} minute {phase === 'work' ? 'session' : 'break'}
+                  </p>
+                  {running ? (
+                    <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                      <span className="h-1.5 w-1.5 animate-pulseSoft rounded-full bg-accent" />
+                      In focus
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="relative mt-7 flex items-center justify-center gap-3">
+                <button
+                  onClick={reset}
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-muted transition-all hover:border-accent/25 hover:text-text"
+                  aria-label="Reset timer"
+                >
+                  <RotateCcw size={19} />
+                </button>
+                <button
+                  onClick={() => setRunning((value) => !value)}
+                  className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-contrast shadow-[0_0_40px_-10px_rgb(var(--accent)/0.9)] transition-all duration-200 hover:scale-105 hover:bg-accent-strong active:scale-95"
+                  aria-label={running ? 'Pause' : 'Start'}
+                >
+                  {running ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
+                </button>
+                <button
+                  onClick={skip}
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-muted transition-all hover:border-accent/25 hover:text-text"
+                  aria-label="Skip phase"
+                >
+                  <Coffee size={19} />
+                </button>
+              </div>
+
+              <p className="relative mt-6 max-w-xs text-center text-sm leading-6 text-muted">
+                {phase === 'work'
+                  ? 'Focus deeply. One task at a time.'
+                  : 'Step away from the screen. Let your attention rest.'}
+              </p>
+            </div>
+
+            <div className="border-t border-line/70 bg-surface/50 p-6 lg:border-l lg:border-t-0">
+              <SectionHeading
+                title="The ritual"
+                description="A simple loop that protects your attention."
+              />
+              <ol className="mt-5 space-y-4">
+                {[
+                  { title: 'Choose one thing', body: 'Close the extra tabs. Name the task.' },
+                  { title: 'Focus for 25 minutes', body: 'No switching. Let the timer hold the boundary.' },
+                  { title: 'Take a real break', body: 'Stand up, breathe, look away from the screen.' },
+                  { title: 'Repeat four times', body: 'Then take a longer break to reset.' },
+                ].map((step, index) => (
+                  <li key={step.title} className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent-soft text-[11px] font-bold text-accent">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-text">{step.title}</p>
+                      <p className="mt-0.5 text-xs leading-5 text-muted">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-6 flex items-center justify-between rounded-xl border border-line/60 bg-card/60 px-3 py-2.5 text-xs">
+                <span className="text-muted">Sessions this cycle</span>
+                <span className="flex items-center gap-1.5">
+                  {[0, 1, 2, 3].map((slot) => (
+                    <span
+                      key={slot}
+                      className={cn(
+                        'h-2 w-2 rounded-full transition-colors',
+                        slot < workCount % 4 || (workCount > 0 && workCount % 4 === 0)
+                          ? 'bg-accent'
+                          : 'bg-line'
+                      )}
+                    />
+                  ))}
+                </span>
               </div>
             </div>
-
-            <div className="relative mt-7 flex items-center justify-center gap-3">
-              <button
-                onClick={reset}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-muted transition-all hover:border-accent/25 hover:text-text"
-                aria-label="Reset timer"
-              >
-                <RotateCcw size={19} />
-              </button>
-              <button
-                onClick={() => setRunning((value) => !value)}
-                className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-contrast shadow-card transition-all duration-200 hover:scale-105 hover:bg-accent-strong active:scale-95"
-                aria-label={running ? 'Pause' : 'Start'}
-              >
-                {running ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
-              </button>
-              <button
-                onClick={skip}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-muted transition-all hover:border-accent/25 hover:text-text"
-                aria-label="Skip phase"
-              >
-                <Coffee size={19} />
-              </button>
-            </div>
-
-            <p className="relative mt-6 max-w-xs text-center text-sm leading-6 text-muted">
-              {phase === 'work'
-                ? 'Focus deeply. One task at a time.'
-                : 'Step away from the screen. Let your attention rest.'}
-            </p>
           </div>
+        </Card>
+      </Reveal>
 
-          <div className="border-t border-line bg-surface/60 p-6 lg:border-l lg:border-t-0">
-            <SectionHeading
-              title="The ritual"
-              description="A simple loop that protects your attention."
-            />
-            <ol className="mt-5 space-y-4">
-              {[
-                { title: 'Choose one thing', body: 'Close the extra tabs. Name the task.' },
-                { title: 'Focus for 25 minutes', body: 'No switching. Let the timer hold the boundary.' },
-                { title: 'Take a real break', body: 'Stand up, breathe, look away from the screen.' },
-                { title: 'Repeat four times', body: 'Then take a longer break to reset.' },
-              ].map((step, index) => (
-                <li key={step.title} className="flex gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-bold text-accent">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-text">{step.title}</p>
-                    <p className="mt-0.5 text-xs leading-5 text-muted">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-6 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => switchPhase('work')} disabled={phase === 'work'}>
-                Focus
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => switchPhase('short_break')}
-                disabled={phase === 'short_break'}
-              >
-                Short break
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => switchPhase('long_break')}
-                disabled={phase === 'long_break'}
-              >
-                Long break
-              </Button>
-            </div>
+      <Reveal delay={120}>
+        <Card className="p-5 sm:p-6">
+          <SectionHeading
+            icon={<Timer size={16} />}
+            title="Focus rhythm"
+            description="Completed minutes over the last 14 days."
+          />
+          <div className="mt-5">
+            {totalMinutes === 0 ? (
+              <EmptyState
+                icon={<Timer size={24} />}
+                title="Your first session starts the chart"
+                body="Press play above. A single focused block is enough to begin."
+              />
+            ) : (
+              <BarChart data={focusSeries} height={160} />
+            )}
           </div>
-        </div>
-      </Card>
-
-      <Card className="p-5 sm:p-6">
-        <SectionHeading
-          icon={<Timer size={16} />}
-          title="Focus rhythm"
-          description="Completed minutes over the last 14 days."
-        />
-        <div className="mt-5">
-          {totalMinutes === 0 ? (
-            <EmptyState
-              icon={<Timer size={24} />}
-              title="Your first session starts the chart"
-              body="Press play above. A single focused block is enough to begin."
-            />
-          ) : (
-            <BarChart data={focusSeries} height={160} />
-          )}
-        </div>
-      </Card>
+        </Card>
+      </Reveal>
     </div>
   );
 }

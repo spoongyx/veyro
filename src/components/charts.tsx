@@ -41,8 +41,11 @@ export function Heatmap({
           {week.map((done, dayIndex) => (
             <div
               key={dayIndex}
-              className="aspect-square w-full rounded-[3px] transition-colors duration-150"
-              style={{ backgroundColor: done ? doneFill : heatFill(0) }}
+              className="animate-heatIn aspect-square w-full rounded-[3px] transition-transform duration-150 hover:scale-125"
+              style={{
+                backgroundColor: done ? doneFill : heatFill(0),
+                animationDelay: `${Math.min(600, (weekIndex * 7 + dayIndex) * 8)}ms`,
+              }}
               title={done ? 'Completed' : 'Not completed'}
             />
           ))}
@@ -71,11 +74,14 @@ export function YearHeatmap({ data }: { data: YearHeatmapData }) {
           <div className="grid grid-cols-[repeat(53,minmax(0,1fr))] gap-[3px]">
             {data.weeks.map((week, weekIndex) => (
               <div key={weekIndex} className="grid grid-rows-7 gap-[3px]">
-                {week.map((cell) => (
+                {week.map((cell, dayIndex) => (
                   <div
                     key={cell.dateKey}
-                    className="aspect-square w-full rounded-[3px] transition-colors duration-150 hover:ring-1 hover:ring-accent/60"
-                    style={{ backgroundColor: cell.inRange ? heatFill(cell.level) : 'rgb(var(--raised))' }}
+                    className="animate-heatIn aspect-square w-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:ring-1 hover:ring-accent/70"
+                    style={{
+                      backgroundColor: cell.inRange ? heatFill(cell.level) : 'rgb(var(--raised))',
+                      animationDelay: `${Math.min(700, ((weekIndex * 7 + dayIndex) % 60) * 10)}ms`,
+                    }}
                     title={
                       cell.inRange
                         ? `${new Date(`${cell.dateKey}T00:00:00`).toLocaleDateString(undefined, {
@@ -133,10 +139,10 @@ export function WeeklyBarChart({ data, height = 180 }: { data: DayStat[]; height
                 <div className="relative flex w-full flex-1 items-end">
                   <div
                     className={cn(
-                      'w-full rounded-t-lg transition-all duration-300 group-hover:brightness-110',
-                      isToday ? 'bg-accent' : 'bg-accent/55'
+                      'animate-barRise w-full origin-bottom rounded-t-lg transition-all duration-300 group-hover:brightness-110',
+                      isToday ? 'bg-accent shadow-[0_0_24px_-6px_rgb(var(--accent)/0.7)]' : 'bg-accent/45 group-hover:bg-accent/65'
                     )}
-                    style={{ height: `${pct}%` }}
+                    style={{ height: `${pct}%`, animationDelay: `${index * 45}ms` }}
                     title={`${day.label} · ${day.completed} of ${day.total} tasks completed`}
                   />
                 </div>
@@ -191,7 +197,14 @@ export function LineChart({ data, height = 220 }: { data: SeriesPoint[]; height?
         const y = top + (lineIndex / 3) * innerH;
         return <line key={lineIndex} x1={left} x2={width - right} y1={y} y2={y} stroke="rgb(var(--line))" strokeWidth={1} />;
       })}
-      {n > 0 && <path d={area} fill={`url(#${uid}-area)`} />}
+      {n > 0 && (
+        <path
+          d={area}
+          fill={`url(#${uid}-area)`}
+          className="animate-fadeIn"
+          style={{ animationDelay: '300ms' }}
+        />
+      )}
       {n > 0 && (
         <path
           d={line}
@@ -201,6 +214,20 @@ export function LineChart({ data, height = 220 }: { data: SeriesPoint[]; height?
           strokeLinecap="round"
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
+          pathLength={1}
+          style={{ strokeDasharray: 1, strokeDashoffset: 0, animation: 'chart-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) both' }}
+        />
+      )}
+      {n > 0 && (
+        <circle
+          cx={xFor(n - 1)}
+          cy={yFor(data[n - 1].value)}
+          r={3.5}
+          fill="rgb(var(--accent))"
+          stroke="rgb(var(--card))"
+          strokeWidth={2}
+          className="animate-fadeIn"
+          style={{ animationDelay: '900ms' }}
         />
       )}
       {labelIndices.map((index) => (
@@ -247,8 +274,8 @@ export function BarChart({
               <div key={point.key} className="group flex h-full flex-1 flex-col justify-end">
                 <div className="relative flex w-full flex-1 items-end">
                   <div
-                    className="w-full rounded-t-md bg-accent/70 transition-all duration-300 group-hover:bg-accent"
-                    style={{ height: `${pct}%` }}
+                    className="animate-barRise w-full origin-bottom rounded-t-md bg-accent/45 transition-all duration-300 group-hover:bg-accent"
+                    style={{ height: `${pct}%`, animationDelay: `${Math.min(500, index * 30)}ms` }}
                     title={`${point.label} · ${point.value} ${unit}`}
                   />
                 </div>

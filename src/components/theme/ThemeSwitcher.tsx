@@ -52,46 +52,61 @@ export function ThemeQuickSwitch({ className }: { className?: string }) {
 
 function ThemePreview({ theme }: { theme: Theme }) {
   const light = theme === 'light';
+  const palette = light
+    ? {
+        bg: '#F6F4F0',
+        side: '#FFFFFF',
+        card: '#FFFFFF',
+        border: '#E2DED6',
+        dot: '#10264A',
+        line: '#DDE1E7',
+        raised: '#F1EFEA',
+        accent: '#3564AC',
+      }
+    : {
+        bg: '#121212',
+        side: '#161616',
+        card: '#1A1A1A',
+        border: '#313030',
+        dot: '#F5F3EF',
+        line: '#313030',
+        raised: '#222222',
+        accent: '#FF8A32',
+      };
   return (
     <div
       className="relative h-24 overflow-hidden rounded-xl border"
-      style={{
-        backgroundColor: light ? '#F7F6F2' : '#05070E',
-        borderColor: light ? '#E2E5EA' : '#1E2940',
-      }}
+      style={{ backgroundColor: palette.bg, borderColor: palette.border }}
     >
       <div
         className="absolute inset-y-0 left-0 w-1/4 border-r"
-        style={{
-          backgroundColor: light ? '#FFFFFF' : '#090D18',
-          borderColor: light ? '#E2E5EA' : '#1E2940',
-        }}
+        style={{ backgroundColor: palette.side, borderColor: palette.border }}
       >
-        <div className="mx-2 mt-3 h-1.5 w-8 rounded-full" style={{ backgroundColor: light ? '#10264A' : '#4C8DFF' }} />
-        <div className="mx-2 mt-2 h-1 w-9 rounded-full" style={{ backgroundColor: light ? '#DDE3EC' : '#1E2940' }} />
-        <div className="mx-2 mt-1.5 h-1 w-7 rounded-full" style={{ backgroundColor: light ? '#DDE3EC' : '#1E2940' }} />
-        <div className="mx-2 mt-1.5 h-1 w-8 rounded-full" style={{ backgroundColor: light ? '#DDE3EC' : '#1E2940' }} />
+        <div className="mx-2 mt-3 h-1.5 w-8 rounded-full" style={{ backgroundColor: palette.accent }} />
+        <div className="mx-2 mt-2 h-1 w-9 rounded-full" style={{ backgroundColor: palette.line }} />
+        <div className="mx-2 mt-1.5 h-1 w-7 rounded-full" style={{ backgroundColor: palette.line }} />
+        <div className="mx-2 mt-1.5 h-1 w-8 rounded-full" style={{ backgroundColor: palette.line }} />
       </div>
       <div className="absolute inset-y-0 left-1/4 right-0 p-3">
         <div className="flex gap-2">
           <div
             className="h-10 flex-1 rounded-lg border p-1.5"
-            style={{ backgroundColor: light ? '#FFFFFF' : '#0C1120', borderColor: light ? '#E2E5EA' : '#1E2940' }}
+            style={{ backgroundColor: palette.card, borderColor: palette.border }}
           >
-            <div className="h-1 w-6 rounded-full" style={{ backgroundColor: light ? '#10264A' : '#EFF3FC' }} />
-            <div className="mt-1.5 h-1 w-10 rounded-full" style={{ backgroundColor: light ? '#DDE3EC' : '#1E2940' }} />
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: light ? '#EEF1F6' : '#111829' }}>
-              <div className="h-full w-2/3 rounded-full" style={{ backgroundColor: light ? '#3564AC' : '#4C8DFF' }} />
+            <div className="h-1 w-6 rounded-full" style={{ backgroundColor: palette.dot }} />
+            <div className="mt-1.5 h-1 w-10 rounded-full" style={{ backgroundColor: palette.line }} />
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: palette.raised }}>
+              <div className="h-full w-2/3 rounded-full" style={{ backgroundColor: palette.accent }} />
             </div>
           </div>
           <div
             className="h-10 w-14 rounded-lg border"
-            style={{ backgroundColor: light ? '#FFFFFF' : '#0C1120', borderColor: light ? '#E2E5EA' : '#1E2940' }}
+            style={{ backgroundColor: palette.card, borderColor: palette.border }}
           />
         </div>
         <div
           className="mt-2 h-6 rounded-lg border"
-          style={{ backgroundColor: light ? '#FFFFFF' : '#0C1120', borderColor: light ? '#E2E5EA' : '#1E2940' }}
+          style={{ backgroundColor: palette.card, borderColor: palette.border }}
         />
       </div>
     </div>
@@ -126,7 +141,7 @@ export function ThemeSwitcher() {
                   className="flex h-6 w-6 items-center justify-center rounded-lg"
                   style={{ backgroundColor: meta.dot }}
                 >
-                  {option === 'light' ? <Sun size={13} color="#FFFFFF" /> : <Moon size={13} color="#04101F" />}
+                  {option === 'light' ? <Sun size={13} color="#FFFFFF" /> : <Moon size={13} color="#180E04" />}
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-text">{meta.label}</p>
