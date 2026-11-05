@@ -50,6 +50,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/app/dashboard';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/app/dashboard';
