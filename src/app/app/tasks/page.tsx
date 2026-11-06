@@ -18,7 +18,7 @@ export default function TasksPage() {
   const { user } = useAuth();
   const { tasks, loading, toggleTask, removeTask, refetch } = useTasks(user?.id);
   const router = useRouter();
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>('today');
   const [query, setQuery] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
@@ -95,8 +95,8 @@ export default function TasksPage() {
   );
 
   const filters: { key: Filter; label: string }[] = [
-    { key: 'all', label: 'All' },
     { key: 'today', label: 'Today' },
+    { key: 'all', label: 'All' },
     { key: 'upcoming', label: 'Upcoming' },
     { key: 'overdue', label: 'Overdue' },
     { key: 'completed', label: 'Completed' },
