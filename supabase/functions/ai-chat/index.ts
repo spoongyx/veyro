@@ -389,13 +389,25 @@ Deno.serve(async (req: Request) => {
         if (!providerResponse.ok) {
           const detail = await providerResponse.text().catch(() => '');
           const status = providerResponse.status;
-          const friendly =
-            status === 429
+          let providerCode = '';
+          try {
+            const parsed = JSON.parse(detail);
+            providerCode = String(parsed?.error?.code ?? parsed?.error?.type ?? '');
+          } catch {
+            providerCode = '';
+          }
+          const quotaExhausted =
+            status === 429 && /insufficient_quota|quota|billing|credit/i.test(`${providerCode} ${detail}`);
+          const friendly = quotaExhausted
+            ? 'Your AI provider account has no remaining quota or credits. Add billing to your provider account (or update the AI_API_KEY secret) and try again.'
+            : status === 429
               ? 'The AI provider is rate limiting requests. Please wait a moment and try again.'
               : status === 401 || status === 403
                 ? 'The AI provider rejected the server API key. Check the AI_API_KEY secret.'
-                : 'The AI provider could not answer right now. Please try again.';
-          console.error('AI provider error', status, detail.slice(0, 500));
+                : status === 404
+                  ? 'The configured AI model was not found. Check the AI_MODEL secret.'
+                  : 'The AI provider could not answer right now. Please try again.';
+          console.error('AI provider error', status, providerCode, detail.slice(0, 500));
           send('error', { message: friendly, retryable: true });
           close();
           return;
