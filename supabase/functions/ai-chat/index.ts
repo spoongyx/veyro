@@ -146,7 +146,11 @@ function systemPrompt(context: unknown, today: string, timeZone: string): string
 
 type ToolCallAccumulator = { id: string; name: string; arguments: string };
 
+const PROVIDER_TIMEOUT_MS = 60_000;
+const HEARTBEAT_MS = 10_000;
+
 Deno.serve(async (req: Request) => {
+  const requestStarted = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -359,7 +363,15 @@ Deno.serve(async (req: Request) => {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
       let closed = false;
+      let heartbeat: ReturnType<typeof setInterval> | undefined;
+      const clearHeartbeat = () => {
+        if (heartbeat !== undefined) {
+          clearInterval(heartbeat);
+          heartbeat = undefined;
+        }
+      };
       const close = () => {
+        clearHeartbeat();
         if (!closed) {
           closed = true;
           controller.close();
@@ -369,22 +381,71 @@ Deno.serve(async (req: Request) => {
       try {
         send('meta', { conversationId, title });
 
-        const providerResponse = await fetch(`${providerBase}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            stream: true,
-            temperature: 0.35,
-            max_tokens: 1200,
-            messages: providerMessages,
-            tools: AI_TOOLS,
-            tool_choice: 'auto',
-          }),
-        });
+        heartbeat = setInterval(() => {
+          if (closed) return;
+          try {
+            controller.enqueue(encoder.encode(': ping\n\n'));
+          } catch {
+            clearHeartbeat();
+          }
+        }, HEARTBEAT_MS);
+
+        const promptBytes = JSON.stringify(providerMessages).length;
+        console.log(
+          'AI context ready',
+          Date.now() - requestStarted,
+          'ms',
+          'prompt_bytes',
+          promptBytes,
+          'model',
+          model
+        );
+
+        let providerResponse: Response;
+        const providerStarted = Date.now();
+        try {
+          providerResponse = await fetch(`${providerBase}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model,
+              stream: true,
+              temperature: 0.35,
+              max_tokens: 1200,
+              messages: providerMessages,
+              tools: AI_TOOLS,
+              tool_choice: 'auto',
+            }),
+            signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+          });
+        } catch (error) {
+          const timedOut =
+            error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError');
+          console.error(
+            timedOut ? 'AI provider timeout' : 'AI provider fetch failed',
+            Date.now() - providerStarted,
+            'ms',
+            error instanceof Error ? error.message : String(error)
+          );
+          send('error', {
+            message: timedOut
+              ? 'The AI provider did not respond in time. Please try again.'
+              : 'Could not reach the AI provider. Please try again.',
+            retryable: true,
+          });
+          close();
+          return;
+        }
+
+        console.log(
+          'AI provider responded',
+          providerResponse.status,
+          Date.now() - providerStarted,
+          'ms'
+        );
 
         if (!providerResponse.ok) {
           const detail = await providerResponse.text().catch(() => '');
@@ -475,6 +536,16 @@ Deno.serve(async (req: Request) => {
           }
         }
 
+        console.log(
+          'AI provider stream ended',
+          Date.now() - providerStarted,
+          'ms',
+          'chars',
+          text.length,
+          'tool_calls',
+          toolCalls.length
+        );
+
         const actions: AiActionProposal[] = [];
         const seen = new Set<string>();
         for (const toolCall of toolCalls) {
@@ -530,6 +601,7 @@ Deno.serve(async (req: Request) => {
           send('actions', { messageId: assistantMessage.id, actions });
         }
         send('done', { conversationId, messageId: assistantMessage.id, title });
+        console.log('AI chat complete', Date.now() - requestStarted, 'ms', 'actions', actions.length);
         close();
       } catch (error) {
         console.error('AI chat error', error);

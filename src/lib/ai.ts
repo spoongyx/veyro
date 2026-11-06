@@ -105,6 +105,7 @@ export async function streamAiChat(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let doneReceived = false;
 
   const dispatch = (block: string) => {
     let event = 'message';
@@ -125,8 +126,10 @@ export async function streamAiChat(
     else if (event === 'delta' && typeof data.text === 'string') callbacks.onDelta?.(data.text);
     else if (event === 'actions' && Array.isArray(data.actions)) {
       callbacks.onActions?.({ messageId: data.messageId, actions: data.actions });
-    } else if (event === 'done') callbacks.onDone?.(data);
-    else if (event === 'error') {
+    } else if (event === 'done') {
+      doneReceived = true;
+      callbacks.onDone?.(data);
+    } else if (event === 'error') {
       throw new Error(typeof data.message === 'string' ? data.message : 'Veyro AI could not answer.');
     }
   };
@@ -143,6 +146,9 @@ export async function streamAiChat(
       }
     }
     if (buffer.trim()) dispatch(buffer);
+    if (!doneReceived) {
+      throw new Error('The AI connection closed before finishing. Please try again.');
+    }
   } finally {
     reader.releaseLock();
   }
