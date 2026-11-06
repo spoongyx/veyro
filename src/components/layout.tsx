@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  Sparkles,
   CheckSquare,
   Flame,
   CalendarDays,
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils/cn';
 
 const NAV_ITEMS = [
   { href: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/app/ai', label: 'AI', icon: Sparkles },
   { href: '/app/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/app/habits', label: 'Habits', icon: Flame },
   { href: '/app/calendar', label: 'Calendar', icon: CalendarDays },
@@ -29,6 +31,8 @@ const NAV_ITEMS = [
   { href: '/app/goals', label: 'Goals', icon: Target },
   { href: '/app/settings', label: 'Settings', icon: Settings },
 ];
+
+const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((item) => item.href !== '/app/settings');
 
 const COLLAPSE_KEY = 'veyro-nav-collapsed';
 
@@ -287,7 +291,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-line/80 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-7 gap-0.5 px-1 py-1.5">
-          {NAV_ITEMS.map((item) => {
+          {MOBILE_NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
