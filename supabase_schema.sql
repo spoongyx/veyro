@@ -181,3 +181,82 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS ai_messages_touch_conversation ON ai_messages;
 CREATE TRIGGER ai_messages_touch_conversation AFTER INSERT ON ai_messages FOR EACH ROW EXECUTE FUNCTION touch_ai_conversation();
+
+-- ---------- Profiles ----------
+
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT NOT NULL CHECK (username ~ '^[A-Za-z0-9_]{3,20}$'),
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_username_lower_idx ON profiles (LOWER(username));
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users read own profile" ON profiles;
+CREATE POLICY "Users read own profile" ON profiles
+  FOR SELECT
+  USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users insert own profile" ON profiles;
+CREATE POLICY "Users insert own profile" ON profiles
+  FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users update own profile" ON profiles;
+CREATE POLICY "Users update own profile" ON profiles
+  FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+GRANT SELECT, INSERT, UPDATE ON profiles TO authenticated;
+
+CREATE OR REPLACE FUNCTION touch_profile_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS profiles_touch_updated_at ON profiles;
+CREATE TRIGGER profiles_touch_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION touch_profile_updated_at();
+
+CREATE OR REPLACE FUNCTION username_available(candidate TEXT, exclude_id UUID DEFAULT NULL)
+RETURNS BOOLEAN AS $$
+  SELECT CASE
+    WHEN candidate IS NULL OR candidate !~ '^[A-Za-z0-9_]{3,20}$' THEN FALSE
+    ELSE NOT EXISTS (
+      SELECT 1
+      FROM profiles
+      WHERE LOWER(username) = LOWER(candidate)
+        AND (exclude_id IS NULL OR id <> exclude_id)
+    )
+  END;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION username_available(TEXT, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION username_available(TEXT, UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION username_available(TEXT, UUID) TO authenticated;
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('avatars', 'avatars', TRUE, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp'])
+ON CONFLICT (id) DO UPDATE
+  SET public = EXCLUDED.public,
+      file_size_limit = EXCLUDED.file_size_limit,
+      allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "Avatar images are publicly readable" ON storage.objects;
+CREATE POLICY "Avatar images are publicly readable" ON storage.objects
+  FOR SELECT
+  USING (bucket_id = 'avatars');
+
+DROP POLICY IF EXISTS "Users manage own avatar images" ON storage.objects;
+CREATE POLICY "Users manage own avatar images" ON storage.objects
+  FOR ALL
+  TO authenticated
+  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text)
+  WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);

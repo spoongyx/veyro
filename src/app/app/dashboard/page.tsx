@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const { tasks, loading, toggleTask } = useTasks(user?.id);
   const { habits, completions, loading: habitsLoading } = useHabits(user?.id);
@@ -77,7 +77,9 @@ export default function DashboardPage() {
   }, [tasks, loading]);
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : hour < 22 ? 'Good evening' : 'Good night';
+  const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'there';
 
   const habitsDoneCount = habits.filter((habit) => {
     if (habit.frequency === 'daily') {
@@ -116,8 +118,7 @@ export default function DashboardPage() {
               {formatDayLabel(new Date())}
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em] text-text sm:text-4xl">
-              {greeting},{' '}
-              <span className="text-muted">{user.email?.split('@')[0]}</span>
+              {greeting}, <span className="text-muted">{displayName}</span>
             </h2>
             <p className="mt-2 max-w-md text-sm leading-6 text-muted">
               Here is the shape of your day so far.

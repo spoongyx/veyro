@@ -80,3 +80,11 @@ export interface AuthUser {
   email: string;
   created_at: string;
 }
+
+export interface Profile {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}

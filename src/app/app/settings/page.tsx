@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Bell, BellRing, Check, Moon, Sun, Wifi, WifiOff } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AtSign, Bell, BellRing, Camera, Check, Moon, Sun, UserRound, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useUsernameAvailability } from '@/lib/hooks/use-username-availability';
 import { InstallButton } from '@/components/pwa';
-import { Avatar, Badge, Button, Card, Reveal, SectionHeading } from '@/components/ui';
+import { UsernameStatusLine } from '@/components/profile/UsernameStatusLine';
+import { Avatar, Badge, Button, Card, Input, Reveal, SectionHeading } from '@/components/ui';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 import { useTheme } from '@/lib/hooks/use-theme';
 import {
@@ -14,6 +16,14 @@ import {
   saveNotificationSettings,
   type NotificationPermission,
 } from '@/lib/notifications';
+import {
+  USERNAME_MAX_LENGTH,
+  normalizeUsername,
+  uploadAvatar,
+  validateAvatarFile,
+  validateUsername,
+} from '@/lib/profile';
+import { createClient } from '@/lib/supabase/client';
 import type { AppNotificationSettings } from '@/lib/types';
 import { isOnline } from '@/lib/offline';
 import { cn } from '@/lib/utils/cn';
@@ -44,8 +54,200 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
   );
 }
 
+function ProfileCard() {
+  const { user, profile, refreshProfile } = useAuth();
+  const [username, setUsername] = useState(profile?.username ?? '');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const availability = useUsernameAvailability(username, user?.id, profile?.username);
+  const usernameProblem = validateUsername(username);
+  const changed = normalizeUsername(username) !== (profile?.username ?? '') || avatarFile !== null;
+
+  useEffect(() => {
+    setUsername(profile?.username ?? '');
+  }, [profile?.username]);
+
+  useEffect(() => {
+    if (!avatarFile) {
+      setAvatarPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const problem = validateAvatarFile(file);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setSaved(false);
+    setAvatarFile(file);
+  };
+
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!user) return;
+
+    const clean = normalizeUsername(username);
+    const problem = validateUsername(clean);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    if (availability === 'taken') {
+      setError('That username is already taken. Try another one.');
+      return;
+    }
+    if (availability === 'checking') {
+      setError('Hang on while we check that username.');
+      return;
+    }
+
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+    try {
+      const supabase = createClient();
+      let avatarUrl = profile?.avatar_url ?? null;
+
+      if (avatarFile) {
+        const upload = await uploadAvatar(supabase, user.id, avatarFile);
+        if (upload.error || !upload.url) {
+          setError(upload.error ?? 'Could not upload your picture. Try again.');
+          return;
+        }
+        avatarUrl = upload.url;
+      }
+
+      const { error: saveError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, username: clean, avatar_url: avatarUrl }, { onConflict: 'id' });
+
+      if (saveError) {
+        setError(
+          saveError.code === '23505'
+            ? 'That username is already taken. Try another one.'
+            : saveError.message
+        );
+        return;
+      }
+
+      setAvatarFile(null);
+      await refreshProfile();
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <SectionHeading
+        icon={<UserRound size={17} />}
+        title="Profile"
+        description="Your username and picture appear across Veyro."
+      />
+      <form onSubmit={handleSave} className="mt-5 space-y-5">
+        <div className="flex flex-wrap items-center gap-4">
+          <Avatar
+            name={profile?.username ?? user?.email}
+            email={user?.email}
+            src={avatarPreview ?? profile?.avatar_url}
+            className="h-16 w-16 text-lg"
+          />
+          <div className="min-w-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera size={15} /> Change picture
+            </Button>
+            <p className="mt-1.5 text-[11px] text-muted">
+              Square images look best. JPG, PNG, or WebP up to 5 MB.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="settings-username" className="mb-1.5 block text-sm font-medium text-text">
+            Username
+          </label>
+          <div className="relative">
+            <AtSign
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+            />
+            <Input
+              id="settings-username"
+              autoComplete="username"
+              spellCheck={false}
+              maxLength={USERNAME_MAX_LENGTH}
+              className="pl-9"
+              value={username}
+              onChange={(event) => {
+                setUsername(event.target.value);
+                setSaved(false);
+                setError(null);
+              }}
+            />
+          </div>
+          <UsernameStatusLine status={availability} />
+        </div>
+
+        {error ? (
+          <div className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {error}
+          </div>
+        ) : null}
+        {saved ? (
+          <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+            Profile updated.
+          </div>
+        ) : null}
+
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            loading={saving}
+            disabled={
+              saving ||
+              !changed ||
+              Boolean(usernameProblem) ||
+              availability === 'checking' ||
+              availability === 'taken'
+            }
+          >
+            Save changes
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { theme, syncState } = useTheme();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [settings, setSettings] = useState<AppNotificationSettings>(loadNotificationSettings);
@@ -100,9 +302,16 @@ export default function SettingsPage() {
               className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full bg-accent/[0.12] blur-3xl"
             />
             <div className="relative flex items-center gap-3">
-              <Avatar name={user?.email} email={user?.email} className="h-12 w-12 text-sm" />
+              <Avatar
+                name={profile?.username ?? user?.email}
+                email={user?.email}
+                src={profile?.avatar_url}
+                className="h-12 w-12 text-sm"
+              />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-text">{user?.email ?? 'Veyro member'}</p>
+                <p className="truncate text-sm font-semibold text-text">
+                  {profile?.username ?? user?.email ?? 'Veyro member'}
+                </p>
                 <p className="mt-0.5 text-xs text-muted">
                   Member since{' '}
                   {user?.created_at
@@ -127,8 +336,16 @@ export default function SettingsPage() {
                 {online ? 'Online' : 'Offline - showing cached data'}
               </p>
             </div>
+            <div className="rounded-xl border border-line/70 bg-surface/70 px-4 py-3 sm:col-span-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Email</p>
+              <p className="mt-1 truncate text-xs text-text">{user?.email ?? 'Not signed in'}</p>
+            </div>
           </div>
         </Card>
+      </Reveal>
+
+      <Reveal delay={30}>
+        <ProfileCard />
       </Reveal>
 
       <Reveal delay={60}>

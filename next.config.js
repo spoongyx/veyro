@@ -23,7 +23,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${supabaseOrigin}`,
   `connect-src 'self' ${supabaseOrigin} ${supabaseWsOrigin} https://fonts.googleapis.com https://fonts.gstatic.com`,
   "worker-src 'self'",
   "manifest-src 'self'",

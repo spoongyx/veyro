@@ -43,8 +43,9 @@ export async function middleware(request: NextRequest) {
   const isResetRoute = pathname.startsWith('/auth/reset-password');
   const isAuthRoute = pathname.startsWith('/auth') && !isCallbackRoute && !isResetRoute;
   const isAppRoute = pathname.startsWith('/app');
+  const isOnboardingRoute = pathname === '/onboarding';
 
-  if (!user && isAppRoute) {
+  if (!user && (isAppRoute || isOnboardingRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
@@ -63,9 +64,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && (isAppRoute || isOnboardingRoute)) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!error) {
+      if (isAppRoute && !data) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/onboarding';
+        url.search = '';
+        return NextResponse.redirect(url);
+      }
+      if (isOnboardingRoute && data) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/app/dashboard';
+        url.search = '';
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/', '/app/:path*', '/auth/:path*'],
+  matcher: ['/', '/app/:path*', '/auth/:path*', '/onboarding'],
 };

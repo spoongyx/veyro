@@ -87,9 +87,10 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const title = getPageTitle(pathname);
   const [collapsed, setCollapsed] = useState(false);
+  const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Veyro member';
 
   useEffect(() => {
     try {
@@ -223,9 +224,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <ThemeQuickSwitch />
               </div>
               <div className="flex items-center gap-2 rounded-xl border border-line/70 bg-card/70 px-2 py-2">
-                <Avatar name={user?.email} email={user?.email} className="h-8 w-8 rounded-lg text-[10px]" />
+                <Avatar
+                  name={displayName}
+                  email={user?.email}
+                  src={profile?.avatar_url}
+                  className="h-8 w-8 rounded-lg text-[10px]"
+                />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-text">{user?.email ?? 'Veyro member'}</p>
+                  <p className="truncate text-xs font-semibold text-text">{displayName}</p>
                   <p className="truncate text-[10px] text-muted">Personal workspace</p>
                 </div>
                 <LogoutButton compact />
@@ -234,7 +240,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ) : (
             <>
               <ThemeToggle className="h-9 w-9" />
-              <Avatar name={user?.email} email={user?.email} className="h-8 w-8 rounded-lg text-[10px]" />
+              <Avatar
+                name={displayName}
+                email={user?.email}
+                src={profile?.avatar_url}
+                className="h-8 w-8 rounded-lg text-[10px]"
+              />
               <LogoutButton compact />
             </>
           )}
@@ -253,8 +264,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/app/settings" aria-label="Open settings">
-            <Avatar name={user?.email} email={user?.email} className="h-8 w-8 rounded-lg text-[10px]" />
+          <Link
+            href="/app/settings"
+            aria-label="Open settings"
+            className="flex items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-raised"
+          >
+            <span className="hidden max-w-[9rem] truncate text-xs font-medium text-muted sm:inline">
+              {displayName}
+            </span>
+            <Avatar
+              name={displayName}
+              email={user?.email}
+              src={profile?.avatar_url}
+              className="h-8 w-8 rounded-lg text-[10px]"
+            />
           </Link>
         </div>
       </header>
@@ -272,8 +295,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               href="/app/settings"
               className="flex items-center gap-2 rounded-xl border border-line/70 bg-card/60 py-1 pl-1 pr-3 transition-colors hover:border-accent/30 hover:bg-raised"
             >
-              <Avatar name={user?.email} email={user?.email} className="h-7 w-7 rounded-lg text-[10px]" />
-              <span className="max-w-[160px] truncate text-xs font-medium text-muted">{user?.email}</span>
+              <Avatar
+                name={displayName}
+                email={user?.email}
+                src={profile?.avatar_url}
+                className="h-7 w-7 rounded-lg text-[10px]"
+              />
+              <span className="max-w-[160px] truncate text-xs font-medium text-muted">{displayName}</span>
             </Link>
           </div>
         </div>

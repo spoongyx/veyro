@@ -4,12 +4,14 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -527,7 +529,18 @@ export function ConfirmDialog({
   );
 }
 
-export function Avatar({ name, email, className }: { name?: string | null; email?: string | null; className?: string }) {
+export function Avatar({
+  name,
+  email,
+  src,
+  className,
+}: {
+  name?: string | null;
+  email?: string | null;
+  src?: string | null;
+  className?: string;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const source = name?.trim() || email?.trim() || 'V';
   const initials = source
     .split(/[\s@._-]+/)
@@ -535,6 +548,21 @@ export function Avatar({ name, email, className }: { name?: string | null; email
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'V';
+
+  if (src && failedSrc !== src) {
+    return (
+      <Image
+        src={src}
+        alt={source}
+        width={64}
+        height={64}
+        unoptimized
+        onError={() => setFailedSrc(src)}
+        className={cn('h-9 w-9 shrink-0 rounded-full object-cover', className)}
+      />
+    );
+  }
+
   return (
     <span
       className={cn(

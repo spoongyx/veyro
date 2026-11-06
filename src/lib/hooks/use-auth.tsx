@@ -4,15 +4,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { createClient } from '@/lib/supabase/client';
 import { clearOfflineData } from '@/lib/offline';
 import { authCallbackUrl } from '@/lib/utils/auth-redirect';
-import type { User } from '@/lib/types';
+import type { Profile, User } from '@/lib/types';
 
 interface AuthContextValue {
   user: User | null;
+  profile: Profile | null;
   loading: boolean;
+  profileLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
 }
@@ -21,27 +24,54 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  const loadProfile = useCallback(async (userId: string | null): Promise<Profile | null> => {
+    if (!userId) {
+      setProfile(null);
+      setProfileLoading(false);
+      return null;
+    }
+
+    setProfileLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, created_at, updated_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const next = !error && data ? (data as Profile) : null;
+    setProfile(next);
+    setProfileLoading(false);
+    return next;
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
 
     supabase.auth.getSession().then(({ data }) => {
-      setUser((data.session?.user as User) ?? null);
+      const sessionUser = (data.session?.user as User) ?? null;
+      setUser(sessionUser);
       setLoading(false);
+      void loadProfile(sessionUser?.id ?? null);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser((session?.user as User) ?? null);
+      const sessionUser = (session?.user as User) ?? null;
+      setUser(sessionUser);
       setLoading(false);
+      void loadProfile(sessionUser?.id ?? null);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const supabase = createClient();
@@ -83,6 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((data.user as User) ?? null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    return loadProfile(user?.id ?? null);
+  }, [loadProfile, user?.id]);
+
   const signInWithGoogle = useCallback(async () => {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -103,8 +137,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, signIn, signUp, signOut, refreshUser, signInWithGoogle, resetPassword }),
-    [user, loading, signIn, signUp, signOut, refreshUser, signInWithGoogle, resetPassword]
+    () => ({
+      user,
+      profile,
+      loading,
+      profileLoading,
+      signIn,
+      signUp,
+      signOut,
+      refreshUser,
+      refreshProfile,
+      signInWithGoogle,
+      resetPassword,
+    }),
+    [
+      user,
+      profile,
+      loading,
+      profileLoading,
+      signIn,
+      signUp,
+      signOut,
+      refreshUser,
+      refreshProfile,
+      signInWithGoogle,
+      resetPassword,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
