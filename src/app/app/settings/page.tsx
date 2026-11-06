@@ -381,7 +381,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between gap-5 py-4 first:pt-0">
               <div>
                 <p className="text-sm font-medium text-text">Task reminders</p>
-                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due. Turn off to silence all task reminders.</p>
+                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due (Veyro must be open). Turn off to silence all task reminders.</p>
               </div>
               <Toggle
                 checked={settings.reminders}

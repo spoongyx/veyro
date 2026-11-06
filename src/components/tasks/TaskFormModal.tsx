@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { updateTask, createTask } from '@/lib/db';
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  type NotificationPermission,
+} from '@/lib/notifications';
 import type { Task, TaskPriority, TaskStatus } from '@/lib/types';
 import { Button, Input, Modal, Select, Textarea } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
@@ -24,9 +29,20 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
   const [dueTime, setDueTime] = useState('09:00');
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderTime, setReminderTime] = useState('09:00');
+  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [reminderInPast, setReminderInPast] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!open || !reminderEnabled) {
+      setReminderInPast(false);
+      return;
+    }
+    const at = new Date(`${dueDate || toISODateKey(new Date())}T${reminderTime || '09:00'}:00`);
+    setReminderInPast(!isNaN(at.getTime()) && at.getTime() < Date.now());
+  }, [open, reminderEnabled, dueDate, reminderTime]);
 
   useEffect(() => {
     if (open) {
@@ -49,8 +65,21 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
       }
       setSaving(false);
       setError(null);
+      void getNotificationPermission().then(setPermission);
     }
   }, [open, task]);
+
+  const handleReminderToggle = async () => {
+    const next = !reminderEnabled;
+    setReminderEnabled(next);
+    if (!next) return;
+
+    const current = await getNotificationPermission();
+    setPermission(current);
+    if (current === 'default') {
+      setPermission(await requestNotificationPermission());
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +87,14 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
     setSaving(true);
     setError(null);
     try {
+      if (reminderEnabled) {
+        const current = await getNotificationPermission();
+        setPermission(current);
+        if (current === 'default') {
+          setPermission(await requestNotificationPermission());
+        }
+      }
+
       const reminderAt = `${dueDate || toISODateKey(new Date())}T${reminderTime || '09:00'}:00`;
       const reminderIso = reminderEnabled ? new Date(reminderAt).toISOString() : null;
       if (task) {
@@ -143,7 +180,15 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
             <div>
               <p className="text-sm font-medium">Time reminder</p>
               <p className="mt-0.5 text-xs leading-5 text-muted">
-                {reminderEnabled ? 'A browser alert will be sent at this time.' : 'No reminder will be sent for this task.'}
+                {!reminderEnabled
+                  ? 'No reminder will be sent for this task.'
+                  : permission === 'granted'
+                    ? 'A browser alert will be sent at this time while Veyro is open.'
+                    : permission === 'denied'
+                      ? 'Notifications are blocked. Allow them in your browser settings to receive this alert.'
+                      : permission === 'unsupported'
+                        ? 'This browser does not support notifications.'
+                        : 'You will be asked to allow browser notifications when you save.'}
               </p>
             </div>
             <button
@@ -151,7 +196,7 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
               role="switch"
               aria-checked={reminderEnabled}
               aria-label="Toggle time reminder"
-              onClick={() => setReminderEnabled((value) => !value)}
+              onClick={() => void handleReminderToggle()}
               className={cn(
                 'relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200',
                 reminderEnabled ? 'border-accent bg-accent' : 'border-line bg-raised'
@@ -167,8 +212,13 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
             </button>
           </div>
           {reminderEnabled && (
-            <div className="mt-3">
+            <div className="mt-3 space-y-1.5">
               <Input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
+              {reminderInPast && (
+                <p className="text-xs leading-5 text-danger">
+                  This time has already passed, so no alert will be sent.
+                </p>
+              )}
             </div>
           )}
         </div>

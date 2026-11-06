@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useTasks, useHabits, useGoals, useFocusSessions } from '@/lib/hooks/use-entities';
-import { areTaskRemindersEnabled, checkTaskReminders, showAppNotification } from '@/lib/notifications';
 import {
   completionRate,
   focusMinutesToday,
@@ -65,16 +64,6 @@ export default function DashboardPage() {
   const bestStreak = useMemo(() => bestHabitStreak(habits, completions), [habits, completions]);
   const focusTotal = useMemo(() => totalFocusMinutes(sessions), [sessions]);
   const tasksTotal = useMemo(() => totalTasksCompleted(tasks), [tasks]);
-
-  useEffect(() => {
-    if (loading || !areTaskRemindersEnabled()) return;
-    checkTaskReminders(tasks, (task, remindAt) => {
-      void showAppNotification(`Reminder: ${task.title}`, {
-        body: `Time to focus - due at ${remindAt.toLocaleTimeString()}.`,
-        tag: `task-${task.id}`,
-      });
-    });
-  }, [tasks, loading]);
 
   const hour = new Date().getHours();
   const greeting =

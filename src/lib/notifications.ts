@@ -76,12 +76,12 @@ export async function showAppNotification(title: string, options?: { body?: stri
   }
 }
 
-const NOTIFIED_KEY = 'veyro-notified-reminders';
+const NOTIFIED_KEY = 'veyro-notified-reminders-v2';
 
 export function getNotifiedReminderKeys(): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = window.localStorage.getItem('veyro-notified-reminders');
+    const raw = window.localStorage.getItem(NOTIFIED_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -92,33 +92,53 @@ export function getNotifiedReminderKeys(): string[] {
 export function addNotifiedReminderKeys(keys: string[]): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem('veyro-notified-reminders', JSON.stringify(Array.from(new Set([...getNotifiedReminderKeys(), ...keys]))));
+    window.localStorage.setItem(NOTIFIED_KEY, JSON.stringify(Array.from(new Set([...getNotifiedReminderKeys(), ...keys]))));
   } catch {
     // ignore
   }
+}
+
+export const REMINDER_GRACE_MS = 30 * 60 * 1000;
+
+export function canShowNotifications(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.Notification !== 'undefined' &&
+    window.Notification.permission === 'granted'
+  );
 }
 
 export function checkTaskReminders(
   tasks: Task[],
   onNotify: (task: Task, remindAt: Date) => void
 ): string[] {
+  if (!canShowNotifications()) return [];
+
   const now = Date.now();
   const keys = getNotifiedReminderKeys();
-  const fresh: string[] = [];
+  const notified: string[] = [];
 
   for (const task of tasks) {
     if (task.status === 'done') continue;
     if (!task.reminder_time) continue;
     const remindAt = new Date(task.reminder_time).getTime();
     if (isNaN(remindAt)) continue;
-    if (remindAt < now) continue;
-    if (remindAt - now > 24 * 60 * 60 * 1000) continue;
+
+    const age = now - remindAt;
+    if (age < 0) continue;
+    if (age > REMINDER_GRACE_MS) continue;
+
     const key = `${task.id}:${new Date(remindAt).toISOString()}`;
     if (keys.includes(key)) continue;
-    fresh.push(key);
-    onNotify(task, new Date(remindAt));
+
+    try {
+      onNotify(task, new Date(remindAt));
+      notified.push(key);
+    } catch {
+      // Leave the key unmarked so it can retry.
+    }
   }
 
-  if (fresh.length) addNotifiedReminderKeys(fresh);
-  return fresh;
+  if (notified.length) addNotifiedReminderKeys(notified);
+  return notified;
 }

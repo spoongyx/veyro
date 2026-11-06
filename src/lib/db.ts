@@ -5,6 +5,12 @@ function sb() {
   return createClient();
 }
 
+function notifyTasksChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('veyro:tasks-changed'));
+  }
+}
+
 // ---------- Tasks ----------
 
 export async function fetchTasks(userId: string): Promise<Task[]> {
@@ -27,6 +33,7 @@ export async function createTask(
     .select()
     .single();
   if (error) throw new Error(error.message);
+  notifyTasksChanged();
   return data as Task;
 }
 
@@ -38,12 +45,14 @@ export async function updateTask(id: string, patch: Partial<Task>): Promise<Task
     .select()
     .single();
   if (error) throw new Error(error.message);
+  notifyTasksChanged();
   return data as Task;
 }
 
 export async function deleteTask(id: string): Promise<void> {
   const { error } = await sb().from('tasks').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  notifyTasksChanged();
 }
 
 // ---------- Habits ----------
