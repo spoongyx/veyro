@@ -1,6 +1,42 @@
-import type { Task } from '@/lib/types';
+import type { AppNotificationSettings, Task } from '@/lib/types';
 
 export type NotificationPermission = 'default' | 'granted' | 'denied' | 'unsupported';
+
+const SETTINGS_KEY = 'veyro-notif-settings';
+
+export const DEFAULT_NOTIFICATION_SETTINGS: AppNotificationSettings = {
+  reminders: true,
+  pomodoroAlerts: true,
+  dailySummary: false,
+};
+
+export function loadNotificationSettings(): AppNotificationSettings {
+  if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_SETTINGS;
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (raw) return { ...DEFAULT_NOTIFICATION_SETTINGS, ...JSON.parse(raw) };
+  } catch {
+    // ignore
+  }
+  return DEFAULT_NOTIFICATION_SETTINGS;
+}
+
+export function saveNotificationSettings(settings: AppNotificationSettings): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // ignore
+  }
+}
+
+export function areTaskRemindersEnabled(): boolean {
+  return loadNotificationSettings().reminders;
+}
+
+export function arePomodoroAlertsEnabled(): boolean {
+  return loadNotificationSettings().pomodoroAlerts;
+}
 
 export async function getNotificationPermission(): Promise<NotificationPermission> {
   if (typeof window === 'undefined' || typeof window.Notification === 'undefined') {

@@ -114,7 +114,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <div className="min-h-screen bg-ink text-text">
+    <div className="min-h-screen min-h-dvh bg-ink text-text">
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-line/80 bg-surface/70 backdrop-blur-xl transition-[width] duration-300 ease-smooth lg:flex',
@@ -237,7 +237,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line/70 bg-ink/85 px-4 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-line/70 bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
         <Link href="/app/dashboard" aria-label="Veyro dashboard" className="flex items-center gap-2 text-base font-semibold text-text">
           <span
             aria-hidden="true"
@@ -274,7 +274,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-16 lg:pt-8">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:px-10 lg:pb-16 lg:pt-8">
           <div className="mb-6 lg:hidden">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">{todayLabel}</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-text">{title}</h1>
@@ -285,7 +285,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-line/80 bg-surface/95 backdrop-blur-xl lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-line/80 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-7 gap-0.5 px-1 py-1.5">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;

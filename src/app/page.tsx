@@ -50,8 +50,8 @@ const PREVIEW_TASKS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-ink text-text">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <div className="min-h-screen min-h-dvh bg-ink text-text">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 pb-5 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6">
         <Link href="/" aria-label="Veyro home" className="flex items-center gap-2.5">
           <span
             aria-hidden="true"
@@ -75,7 +75,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="relative isolate mx-auto flex max-w-6xl flex-col items-center overflow-hidden px-6 pb-24 pt-20 text-center">
+      <main className="relative isolate mx-auto flex max-w-6xl flex-col items-center overflow-hidden px-4 pb-24 pt-12 text-center sm:px-6 sm:pt-20">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-[760px] max-w-full -translate-x-1/2 rounded-full bg-accent/[0.08] blur-[120px]"
@@ -84,7 +84,7 @@ export default function LandingPage() {
           <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulseSoft rounded-full bg-accent" />
           Productivity, reimagined
         </p>
-        <h1 className="max-w-3xl text-balance bg-gradient-to-b from-text via-text to-text/55 bg-clip-text text-5xl font-semibold tracking-[-0.05em] text-transparent sm:text-6xl lg:text-7xl">
+        <h1 className="max-w-3xl text-balance bg-gradient-to-b from-text via-text to-text/55 bg-clip-text text-4xl font-semibold tracking-[-0.05em] text-transparent sm:text-6xl lg:text-7xl">
           Focus, simplified.
         </h1>
         <p className="mt-6 max-w-xl text-balance text-lg leading-8 text-muted">
@@ -227,7 +227,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-sm text-muted sm:flex-row sm:px-6">
           <p>Veyro — a calm place to get things done.</p>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="transition-colors hover:text-text">

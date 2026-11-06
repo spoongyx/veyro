@@ -127,7 +127,7 @@ export function Field({
 }
 
 const fieldClassName =
-  'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-text shadow-soft transition-colors placeholder:text-muted/70 hover:border-line focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60';
+  'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-text shadow-soft transition-colors placeholder:text-muted/70 hover:border-line focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm';
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(fieldClassName, className)} {...props} />;
@@ -195,7 +195,7 @@ export function Modal({
       <div
         ref={panelRef}
         className={cn(
-          'animate-scaleIn flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-card shadow-float sm:max-w-lg sm:rounded-2xl',
+          'animate-scaleIn flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-card pb-[env(safe-area-inset-bottom)] shadow-float sm:max-w-lg sm:rounded-2xl sm:pb-0',
           className
         )}
         onClick={(e) => e.stopPropagation()}

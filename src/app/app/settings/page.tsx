@@ -7,32 +7,16 @@ import { InstallButton } from '@/components/pwa';
 import { Avatar, Badge, Button, Card, Reveal, SectionHeading } from '@/components/ui';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 import { useTheme } from '@/lib/hooks/use-theme';
-import { getNotificationPermission, requestNotificationPermission, type NotificationPermission } from '@/lib/notifications';
+import {
+  getNotificationPermission,
+  loadNotificationSettings,
+  requestNotificationPermission,
+  saveNotificationSettings,
+  type NotificationPermission,
+} from '@/lib/notifications';
+import type { AppNotificationSettings } from '@/lib/types';
 import { isOnline } from '@/lib/offline';
 import { cn } from '@/lib/utils/cn';
-
-interface NotifSettings {
-  reminders: boolean;
-  pomodoroAlerts: boolean;
-  dailySummary: boolean;
-}
-
-const DEFAULT_NOTIF_SETTINGS: NotifSettings = {
-  reminders: true,
-  pomodoroAlerts: true,
-  dailySummary: false,
-};
-
-function loadNotifSettings(): NotifSettings {
-  if (typeof window === 'undefined') return DEFAULT_NOTIF_SETTINGS;
-  try {
-    const raw = window.localStorage.getItem('veyro-notif-settings');
-    if (raw) return { ...DEFAULT_NOTIF_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    // ignore
-  }
-  return DEFAULT_NOTIF_SETTINGS;
-}
 
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
@@ -64,7 +48,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { theme, syncState } = useTheme();
   const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [settings, setSettings] = useState<NotifSettings>(loadNotifSettings);
+  const [settings, setSettings] = useState<AppNotificationSettings>(loadNotificationSettings);
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
@@ -79,19 +63,24 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const updateSetting = (key: keyof NotifSettings, value: boolean) => {
+  const updateSetting = (key: keyof AppNotificationSettings, value: boolean) => {
     const next = { ...settings, [key]: value };
     setSettings(next);
-    try {
-      window.localStorage.setItem('veyro-notif-settings', JSON.stringify(next));
-    } catch {
-      // ignore
-    }
+    saveNotificationSettings(next);
   };
 
   const handleEnableNotifications = async () => {
     const result = await requestNotificationPermission();
     setPermission(result);
+    return result;
+  };
+
+  const toggleReminderSetting = async (key: 'reminders' | 'pomodoroAlerts', value: boolean) => {
+    if (value && permission === 'default') {
+      const result = await handleEnableNotifications();
+      if (result !== 'granted') return;
+    }
+    updateSetting(key, value);
   };
 
   const syncCopy: Record<typeof syncState, string> = {
@@ -175,12 +164,12 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between gap-5 py-4 first:pt-0">
               <div>
                 <p className="text-sm font-medium text-text">Task reminders</p>
-                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due.</p>
+                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due. Turn off to silence all task reminders.</p>
               </div>
               <Toggle
                 checked={settings.reminders}
-                onChange={(v) => updateSetting('reminders', v)}
-                disabled={permission !== 'granted'}
+                onChange={(v) => void toggleReminderSetting('reminders', v)}
+                disabled={permission === 'unsupported'}
               />
             </div>
             <div className="flex items-center justify-between gap-5 py-4">
@@ -190,8 +179,8 @@ export default function SettingsPage() {
               </div>
               <Toggle
                 checked={settings.pomodoroAlerts}
-                onChange={(v) => updateSetting('pomodoroAlerts', v)}
-                disabled={permission !== 'granted'}
+                onChange={(v) => void toggleReminderSetting('pomodoroAlerts', v)}
+                disabled={permission === 'unsupported'}
               />
             </div>
             <div className="flex items-center justify-between gap-5 py-4">

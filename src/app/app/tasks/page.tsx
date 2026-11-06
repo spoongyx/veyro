@@ -56,6 +56,30 @@ export default function TasksPage() {
     if (q) {
       list = list.filter((t) => t.title.toLowerCase().includes(q) || (t.description ?? '').toLowerCase().includes(q));
     }
+
+    const dayRank = (task: Task) => {
+      if (task.status === 'done') return 4;
+      if (task.due_date === todayKey) return 0;
+      if (task.due_date && task.due_date < todayKey) return 1;
+      if (task.due_date) return 2;
+      return 3;
+    };
+
+    list.sort((a, b) => {
+      const rank = dayRank(a) - dayRank(b);
+      if (rank !== 0) return rank;
+      if (a.status === 'done' && b.status === 'done') {
+        return (b.completed_at ?? b.updated_at ?? '').localeCompare(a.completed_at ?? a.updated_at ?? '');
+      }
+      if (a.due_date && b.due_date && a.due_date !== b.due_date) {
+        return a.due_date.localeCompare(b.due_date);
+      }
+      const timeA = a.due_time ?? '99:99';
+      const timeB = b.due_time ?? '99:99';
+      if (timeA !== timeB) return timeA.localeCompare(timeB);
+      return (b.created_at ?? '').localeCompare(a.created_at ?? '');
+    });
+
     return list;
   }, [tasks, filter, query, todayKey]);
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Coffee, Pause, Play, RotateCcw, Timer } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useFocusSessions } from '@/lib/hooks/use-entities';
-import { showAppNotification } from '@/lib/notifications';
+import { arePomodoroAlertsEnabled, showAppNotification } from '@/lib/notifications';
 import { focusMinutesSeries, totalFocusMinutes } from '@/lib/utils/analytics';
 import { cn } from '@/lib/utils/cn';
 import { Card, EmptyState, Reveal, SectionHeading, StatCard } from '@/components/ui';
@@ -80,15 +80,19 @@ export default function FocusPage() {
       const nextPhase: Phase = nextWorkCount % 4 === 0 ? 'long_break' : 'short_break';
       setPhase(nextPhase);
       setSecondsLeft(PHASE_SECONDS[nextPhase]);
-      void showAppNotification('Focus session complete', {
-        body: 'Great work - take a well-deserved break.',
-        tag: 'pomodoro-complete',
-      });
+      if (arePomodoroAlertsEnabled()) {
+        void showAppNotification('Focus session complete', {
+          body: 'Great work - take a well-deserved break.',
+          tag: 'pomodoro-complete',
+        });
+      }
     } else {
       if (phase === 'long_break') setWorkCount(0);
       setPhase('work');
       setSecondsLeft(PHASE_SECONDS.work);
-      void showAppNotification('Break over', { body: 'Time to get back into focus.', tag: 'break-complete' });
+      if (arePomodoroAlertsEnabled()) {
+        void showAppNotification('Break over', { body: 'Time to get back into focus.', tag: 'break-complete' });
+      }
     }
   };
 
