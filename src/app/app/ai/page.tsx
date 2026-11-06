@@ -13,16 +13,20 @@ import {
   MessageSquare,
   Plus,
   RefreshCw,
+  Search,
   Send,
   Sparkles,
   Target,
+  Trash2,
   TriangleAlert,
+  X,
 } from 'lucide-react';
 import { Button, Card, IconButton, Modal } from '@/components/ui';
 import { useToast } from '@/components/toast';
 import { cn } from '@/lib/utils/cn';
 import {
   actionDetails,
+  deleteAiConversation,
   executeAiAction,
   fetchConversationMessages,
   fetchConversations,
@@ -120,17 +124,56 @@ function Markdown({ content }: { content: string }) {
   );
 }
 
+function ConversationSearch({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <Search
+        size={13}
+        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted"
+      />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search conversations"
+        aria-label="Search conversations"
+        className="h-8 w-full rounded-lg border border-line/70 bg-card/60 pl-8 pr-8 text-xs text-text outline-none transition-colors placeholder:text-muted/70 focus:border-accent/40 focus:ring-2 focus:ring-accent/10"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label="Clear search"
+          title="Clear search"
+          className="absolute right-1.5 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-raised hover:text-text"
+        >
+          <X size={11} />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function ConversationList({
   conversations,
   activeId,
   loading,
+  query,
   onSelect,
+  onDelete,
   className,
 }: {
   conversations: AiConversation[];
   activeId: string | null;
   loading: boolean;
+  query?: string;
   onSelect: (id: string) => void;
+  onDelete: (conversation: AiConversation) => void;
   className?: string;
 }) {
   if (loading) {
@@ -144,11 +187,16 @@ function ConversationList({
   }
 
   if (!conversations.length) {
+    const searching = Boolean(query?.trim());
     return (
       <p className={cn('px-2 py-6 text-center text-xs leading-5 text-muted', className)}>
-        No conversations yet.
-        <br />
-        Start a new chat to begin.
+        {searching ? 'No conversations match your search.' : 'No conversations yet.'}
+        {searching ? null : (
+          <>
+            <br />
+            Start a new chat to begin.
+          </>
+        )}
       </p>
     );
   }
@@ -158,19 +206,35 @@ function ConversationList({
       {conversations.map((conversation) => {
         const active = conversation.id === activeId;
         return (
-          <button
+          <div
             key={conversation.id}
-            type="button"
-            onClick={() => onSelect(conversation.id)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors',
-              active ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-raised/70 hover:text-text'
+              'group flex items-center gap-1 rounded-lg pr-1 transition-colors',
+              active ? 'bg-accent/10' : 'hover:bg-raised/70'
             )}
           >
-            <MessageSquare size={14} className="shrink-0" />
-            <span className="min-w-0 flex-1 truncate text-xs font-medium">{conversation.title}</span>
+            <button
+              type="button"
+              onClick={() => onSelect(conversation.id)}
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors',
+                active ? 'text-accent' : 'text-muted hover:text-text'
+              )}
+            >
+              <MessageSquare size={14} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-xs font-medium">{conversation.title}</span>
+            </button>
             <span className="shrink-0 text-[10px] text-muted">{formatDay(conversation.updated_at)}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onDelete(conversation)}
+              aria-label={`Delete ${conversation.title}`}
+              title="Delete conversation"
+              className="ml-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted/70 transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         );
       })}
     </div>
@@ -352,6 +416,14 @@ export default function AiPage() {
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
   const [setupMessage, setSetupMessage] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversationQuery, setConversationQuery] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<AiConversation | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const normalizedQuery = conversationQuery.trim().toLowerCase();
+  const visibleConversations = normalizedQuery
+    ? conversations.filter((conversation) => conversation.title.toLowerCase().includes(normalizedQuery))
+    : conversations;
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -531,6 +603,27 @@ export default function AiPage() {
     setSending(false);
   }, []);
 
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteAiConversation(deleteTarget.id);
+      setConversations((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+      if (activeConversationId === deleteTarget.id) {
+        startNewChat();
+      }
+      toast('Conversation deleted', {
+        description: 'The chat and its messages were permanently removed.',
+        tone: 'success',
+      });
+      setDeleteTarget(null);
+    } catch (err) {
+      toast('Could not delete conversation', { description: friendlyError(err), tone: 'error' });
+    } finally {
+      setDeleting(false);
+    }
+  }, [activeConversationId, deleteTarget, deleting, startNewChat, toast]);
+
   const handleAction = useCallback(
     async (message: AiMessage, action: AiActionProposal, decision: 'apply' | 'cancel') => {
       const current = message.metadata.actions ?? [];
@@ -619,12 +712,17 @@ export default function AiPage() {
                 <Plus size={14} />
               </IconButton>
             </div>
+            <div className="border-b border-line/70 px-2.5 py-2">
+              <ConversationSearch value={conversationQuery} onChange={setConversationQuery} />
+            </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               <ConversationList
-                conversations={conversations}
+                conversations={visibleConversations}
                 activeId={activeConversationId}
                 loading={conversationsLoading}
+                query={conversationQuery}
                 onSelect={(id) => void openConversation(id)}
+                onDelete={(conversation) => setDeleteTarget(conversation)}
               />
             </div>
             <div className="border-t border-line/70 p-3">
@@ -806,13 +904,43 @@ export default function AiPage() {
           New chat
         </Button>
         <div className="mt-3">
+          <ConversationSearch value={conversationQuery} onChange={setConversationQuery} />
+        </div>
+        <div className="mt-2">
           <ConversationList
-            conversations={conversations}
+            conversations={visibleConversations}
             activeId={activeConversationId}
             loading={conversationsLoading}
+            query={conversationQuery}
             onSelect={(id) => void openConversation(id)}
+            onDelete={(conversation) => setDeleteTarget(conversation)}
           />
         </div>
+      </Modal>
+
+      <Modal
+        open={deleteTarget !== null}
+        onClose={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        title="Delete conversation?"
+        description="This permanently removes the conversation and all of its messages."
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" disabled={deleting} onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" loading={deleting} onClick={() => void confirmDelete()}>
+              <Trash2 size={14} />
+              Delete
+            </Button>
+          </div>
+        }
+      >
+        <div className="break-words rounded-xl border border-line bg-surface/60 px-3 py-2.5 text-sm text-text">
+          {deleteTarget?.title}
+        </div>
+        <p className="mt-2.5 text-xs leading-5 text-muted">This action can&apos;t be undone.</p>
       </Modal>
     </>
   );

@@ -194,6 +194,12 @@ export async function fetchConversationMessages(conversationId: string): Promise
   }));
 }
 
+export async function deleteAiConversation(conversationId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('ai_conversations').delete().eq('id', conversationId);
+  if (error) throw new Error(error.message);
+}
+
 export async function saveMessageActions(messageId: string, actions: AiActionProposal[]): Promise<void> {
   const supabase = createClient();
   const { data: current, error: readError } = await supabase
