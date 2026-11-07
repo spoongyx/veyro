@@ -27,7 +27,7 @@ export default function ReminderWatcher() {
       if (!areTaskRemindersEnabled()) return;
       checkTaskReminders(tasksRef.current, (task, remindAt) => {
         void showAppNotification(`Reminder: ${task.title}`, {
-          body: `Due at ${remindAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+          body: `Due at ${remindAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}.`,
           tag: `task-${task.id}`,
         });
       });

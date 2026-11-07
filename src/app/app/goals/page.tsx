@@ -155,7 +155,7 @@ export default function GoalsPage() {
                           <span className="inline-flex items-center gap-1 rounded-full border border-line/60 bg-raised/50 px-2 py-0.5">
                             <CalendarDays size={11} />
                             {goal.deadline
-                              ? new Date(`${goal.deadline}T00:00:00`).toLocaleDateString(undefined, {
+                              ? new Date(`${goal.deadline}T00:00:00`).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
                                   year: 'numeric',

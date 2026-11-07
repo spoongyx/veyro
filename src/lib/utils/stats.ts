@@ -58,7 +58,7 @@ export function weeklyStats(tasks: Task[], days = 7): DayStat[] {
     const completed = tasksCompletedOn(tasks, key).length;
     out.push({
       key,
-      label: d.toLocaleDateString(undefined, { weekday: 'short' }),
+      label: d.toLocaleDateString('en-US', { weekday: 'short' }),
       completed,
       total: todays.length,
     });

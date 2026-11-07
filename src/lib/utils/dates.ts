@@ -68,7 +68,7 @@ export function formatDayLabel(d: Date): string {
   if (isSameDay(d, now)) return 'Today';
   if (isSameDay(d, addDays(now, -1))) return 'Yesterday';
   if (isSameDay(d, addDays(now, 1))) return 'Tomorrow';
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function getWeekStart(d: Date): Date {
@@ -119,11 +119,11 @@ export function combineDateTime(dateKey: string, time: string): Date {
 }
 
 export function formatTime(d: Date): string {
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
 export function formatShortDate(d: Date): string {
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function minutesBetween(a: Date, b: Date): number {

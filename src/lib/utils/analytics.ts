@@ -68,7 +68,7 @@ export function buildYearHeatmap(completions: HabitCompletion[]): YearHeatmapDat
     const monday = addDays(start, weekIndex * 7);
     if (weekIndex === 0 || monday.getMonth() !== previousMonth) {
       monthLabels.push({
-        label: monday.toLocaleDateString(undefined, { month: 'short' }),
+        label: monday.toLocaleDateString('en-US', { month: 'short' }),
         weekIndex,
       });
       previousMonth = monday.getMonth();
@@ -109,7 +109,7 @@ export function tasksCompletedPerDay(tasks: Task[], days = 30): SeriesPoint[] {
     const key = getDayKey(date);
     return {
       key,
-      label: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       value: completedCounts.get(key) ?? 0,
     };
   });
@@ -129,7 +129,7 @@ export function focusMinutesSeries(sessions: FocusSession[], days = 14): SeriesP
     const key = getDayKey(date);
     return {
       key,
-      label: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       value: minutesByDay.get(key) ?? 0,
     };
   });

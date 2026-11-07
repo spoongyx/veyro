@@ -111,9 +111,9 @@ function formatDay(value: string): string {
   const date = new Date(value);
   const now = new Date();
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function Markdown({ content }: { content: string }) {

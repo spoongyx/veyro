@@ -112,7 +112,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const todayLabel = new Date().toLocaleDateString(undefined, {
+  const todayLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

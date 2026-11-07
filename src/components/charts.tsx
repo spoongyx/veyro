@@ -84,7 +84,7 @@ export function YearHeatmap({ data }: { data: YearHeatmapData }) {
                     }}
                     title={
                       cell.inRange
-                        ? `${new Date(`${cell.dateKey}T00:00:00`).toLocaleDateString(undefined, {
+                        ? `${new Date(`${cell.dateKey}T00:00:00`).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',

@@ -47,10 +47,10 @@ export default function CalendarPage() {
 
   const rangeTitle =
     view === 'month'
-      ? cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      ? cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       : view === 'week'
-        ? `${getWeekStart(cursor).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} — ${addDays(getWeekStart(cursor), 6).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
-        : selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        ? `${getWeekStart(cursor).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — ${addDays(getWeekStart(cursor), 6).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <div className="space-y-5">
@@ -174,10 +174,10 @@ export default function CalendarPage() {
                 <Card className={cn('h-full p-4', today && 'border-accent/40 bg-accent/[0.04]')}>
                   <div className="flex items-baseline justify-between">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-                      {d.toLocaleDateString(undefined, { weekday: 'short' })}
+                      {d.toLocaleDateString('en-US', { weekday: 'short' })}
                     </p>
                     <p className={cn('text-lg font-semibold tabular-nums', today ? 'text-accent' : 'text-text')}>
-                      {d.toLocaleDateString(undefined, { day: 'numeric' })}
+                      {d.toLocaleDateString('en-US', { day: 'numeric' })}
                     </p>
                   </div>
                   <div className="mt-3 space-y-2">
@@ -207,10 +207,10 @@ export default function CalendarPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
-                  {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}
+                  {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}
                 </p>
                 <h3 className="mt-1 text-lg font-semibold tracking-tight text-text">
-                  {selectedDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                  {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
                 </h3>
               </div>
               <Button size="sm" onClick={() => router.push('/app/tasks?new=1')}>

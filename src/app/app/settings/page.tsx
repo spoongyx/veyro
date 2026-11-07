@@ -315,7 +315,7 @@ export default function SettingsPage() {
                 <p className="mt-0.5 text-xs text-muted">
                   Member since{' '}
                   {user?.created_at
-                    ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+                    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                     : 'today'}
                 </p>
               </div>
