@@ -17,8 +17,7 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#FF8A32');
-  const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
-  const [targetDays, setTargetDays] = useState(7);
+  const [daysPerWeek, setDaysPerWeek] = useState(7);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -28,8 +27,8 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
       setName(habit?.name ?? '');
       setDescription(habit?.description ?? '');
       setColor(habit?.color ?? '#FF8A32');
-      setFrequency(habit?.frequency ?? 'daily');
-      setTargetDays(habit?.target_days ?? 7);
+      const storedTarget = Math.min(7, Math.max(1, Math.round(Number(habit?.target_days) || 7)));
+      setDaysPerWeek(habit ? (habit.frequency === 'daily' ? 7 : storedTarget) : 7);
       setError(null);
     }
   }, [open, habit]);
@@ -50,8 +49,8 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
         name: name.trim(),
         description: description.trim() || null,
         color,
-        frequency,
-        target_days: frequency === 'weekly' ? targetDays : 7,
+        frequency: daysPerWeek >= 7 ? ('daily' as const) : ('weekly' as const),
+        target_days: daysPerWeek,
       };
       if (habit) {
         await updateHabit(habit.id, payload);
@@ -78,24 +77,20 @@ export default function HabitFormModal({ open, onClose, habit, onSaved }: HabitF
           <label className="mb-1.5 block text-sm font-medium">Description</label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional notes" rows={2} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">Frequency</label>
-            <Select value={frequency} onChange={(e) => setFrequency(e.target.value as 'daily' | 'weekly')}>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">Target days / week</label>
-            <Input
-              type="number"
-              min={1}
-              max={7}
-              value={frequency === 'weekly' ? targetDays : 7}
-              onChange={(e) => setTargetDays(Number(e.target.value) || 7)}
-            />
-          </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">How many days per week?</label>
+          <Select value={daysPerWeek} onChange={(e) => setDaysPerWeek(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6, 7].map((days) => (
+              <option key={days} value={days}>
+                {days === 7 ? '7 days (every day)' : `${days} day${days === 1 ? '' : 's'} per week`}
+              </option>
+            ))}
+          </Select>
+          <p className="mt-1.5 text-xs text-muted">
+            {daysPerWeek === 7
+              ? 'Check in every day to reach 100% each week.'
+              : `Check in ${daysPerWeek} time${daysPerWeek === 1 ? '' : 's'} this week to reach 100%.`}
+          </p>
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium">Color</label>

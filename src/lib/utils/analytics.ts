@@ -1,6 +1,6 @@
 import type { FocusSession, Goal, Habit, HabitCompletion, Task } from '@/lib/types';
 import { addDays, getWeekStart, startOfDay } from './dates';
-import { getDayKey, habitStreak } from './stats';
+import { getDayKey, habitStreak, habitWeeklyTarget } from './stats';
 
 export type HeatLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -150,25 +150,38 @@ export function bestHabitStreak(habits: Habit[], completions: HabitCompletion[])
 export function habitCompletionRate(habits: Habit[], completions: HabitCompletion[], days = 30): number | null {
   if (!habits.length) return null;
   const today = startOfDay(new Date());
-  let possible = 0;
-  let done = 0;
-  for (const habit of habits) {
-    for (let index = 0; index < days; index += 1) {
-      const date = addDays(today, -index);
-      const key = getDayKey(date);
-      if (habit.created_at && habit.created_at.slice(0, 10) > key) continue;
-      possible += 1;
-      if (completions.some((completion) => completion.habit_id === habit.id && completion.completed_date === key)) {
-        done += 1;
-      }
-    }
-  }
-  if (possible === 0) return null;
-  return Math.round((done / possible) * 100);
+  const todayKey = getDayKey(today);
+  const active = habits.filter((habit) => !habit.created_at || habit.created_at.slice(0, 10) <= todayKey);
+  if (!active.length) return null;
+  const total = active.reduce((sum, habit) => sum + habitRate(habit, completions, days), 0);
+  return Math.round(total / active.length);
 }
 
 export function habitRate(habit: Habit, completions: HabitCompletion[], days = 30): number {
   const today = startOfDay(new Date());
+  const target = habitWeeklyTarget(habit);
+
+  if (target < 7) {
+    const weeks = Math.max(1, Math.round(days / 7));
+    let possible = 0;
+    let done = 0;
+    for (let index = 0; index < weeks; index += 1) {
+      const weekStart = getWeekStart(addDays(today, -index * 7));
+      const weekEndKey = getDayKey(addDays(weekStart, 6));
+      if (habit.created_at && habit.created_at.slice(0, 10) > weekEndKey) continue;
+      const weekStartKey = getDayKey(weekStart);
+      const weekDone = completions.filter(
+        (completion) =>
+          completion.habit_id === habit.id &&
+          completion.completed_date >= weekStartKey &&
+          completion.completed_date <= weekEndKey
+      ).length;
+      possible += target;
+      done += Math.min(target, weekDone);
+    }
+    return possible > 0 ? Math.round((done / possible) * 100) : 0;
+  }
+
   let possible = 0;
   let done = 0;
   for (let index = 0; index < days; index += 1) {

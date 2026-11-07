@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Check, Flame, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useHabits } from '@/lib/hooks/use-entities';
-import { getDayKey, habitConsistency, habitStreak } from '@/lib/utils/stats';
+import { getDayKey, habitConsistency, habitStreak, habitWeekProgress, habitWeeklyTarget } from '@/lib/utils/stats';
 import { habitCompletionRate, habitRate } from '@/lib/utils/analytics';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -54,6 +54,8 @@ export default function HabitsPage() {
   );
   const selectedRate = selectedHabit ? habitRate(selectedHabit, completions, 30) : 0;
   const selectedStreak = selectedHabit ? habitStreak(completions, selectedHabit) : 0;
+  const selectedWeek = selectedHabit ? habitWeekProgress(completions, selectedHabit) : null;
+  const selectedStreakUnit = selectedHabit && habitWeeklyTarget(selectedHabit) < 7 ? 'w' : 'd';
 
   const handleToggle = async (habit: Habit) => {
     const existing = completions.find(
@@ -173,7 +175,9 @@ export default function HabitsPage() {
                   (completion) => completion.habit_id === habit.id && completion.completed_date === todayKey
                 );
                 const streak = habitStreak(completions, habit);
-                const rate = habitRate(habit, completions, 30);
+                const week = habitWeekProgress(completions, habit);
+                const weekMet = week.done >= week.target;
+                const streakUnit = habitWeeklyTarget(habit) < 7 ? 'w' : 'd';
                 const isSelected = selectedHabit?.id === habit.id;
                 return (
                   <Reveal key={habit.id} delay={Math.min(240, index * 40)}>
@@ -208,8 +212,10 @@ export default function HabitsPage() {
                             <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: habit.color }} />
                             <p className="truncate text-sm font-semibold text-text">{habit.name}</p>
                           </div>
-                          <p className="mt-0.5 text-[11px] capitalize text-muted">
-                            {habit.frequency} · {rate}% this month · {streak}d streak
+                          <p className="mt-0.5 text-[11px] text-muted">
+                            {week.target === 7 ? 'daily' : `${week.target} days/week`} · {week.done}/{week.target} this
+                            week · {streak}
+                            {streakUnit} streak
                           </p>
                         </button>
                         <div className="hidden items-center gap-1 sm:flex">
@@ -231,10 +237,12 @@ export default function HabitsPage() {
                             <Trash2 size={15} />
                           </button>
                         </div>
-                        <Badge tone={done ? 'success' : 'neutral'}>{done ? 'done' : 'pending'}</Badge>
+                        <Badge tone={weekMet || done ? 'success' : 'neutral'}>
+                          {weekMet ? 'week met' : done ? 'done' : 'pending'}
+                        </Badge>
                       </div>
                       <div className="mt-3 pl-[52px]">
-                        <Progress value={rate} max={100} size="sm" tone={done ? 'success' : 'accent'} />
+                        <Progress value={week.percent} max={100} size="sm" tone={weekMet ? 'success' : 'accent'} />
                       </div>
                     </Card>
                   </Reveal>
@@ -266,16 +274,23 @@ export default function HabitsPage() {
                         </button>
                       }
                     />
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <div className="rounded-xl border border-line/70 bg-surface/70 px-3 py-2.5">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Streak</p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums tracking-[-0.03em] text-text">
-                          {selectedStreak}d
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      <div className="rounded-xl border border-line/70 bg-surface/70 px-2.5 py-2.5">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">Streak</p>
+                        <p className="mt-1 text-xl font-semibold tabular-nums tracking-[-0.03em] text-text">
+                          {selectedStreak}
+                          {selectedStreakUnit}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-line/70 bg-surface/70 px-3 py-2.5">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">30 days</p>
-                        <p className="mt-1 text-2xl font-semibold tabular-nums tracking-[-0.03em] text-text">
+                      <div className="rounded-xl border border-line/70 bg-surface/70 px-2.5 py-2.5">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">This week</p>
+                        <p className="mt-1 text-xl font-semibold tabular-nums tracking-[-0.03em] text-text">
+                          {selectedWeek?.done ?? 0}/{selectedWeek?.target ?? 7}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-line/70 bg-surface/70 px-2.5 py-2.5">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">30 days</p>
+                        <p className="mt-1 text-xl font-semibold tabular-nums tracking-[-0.03em] text-text">
                           {selectedRate}%
                         </p>
                       </div>

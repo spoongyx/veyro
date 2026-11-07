@@ -1,5 +1,5 @@
 import type { Task, Habit, HabitCompletion, Goal, FocusSession } from '@/lib/types';
-import { startOfDay } from './dates';
+import { addDays, getWeekStart, startOfDay } from './dates';
 
 export function getDayKey(d: Date): string {
   const y = d.getFullYear();
@@ -66,21 +66,75 @@ export function weeklyStats(tasks: Task[], days = 7): DayStat[] {
   return out;
 }
 
+export function habitWeeklyTarget(habit: Habit): number {
+  const parsed = Number(habit.target_days);
+  if (!Number.isFinite(parsed)) return 7;
+  return Math.min(7, Math.max(1, Math.round(parsed)));
+}
+
+export interface HabitWeekProgress {
+  done: number;
+  target: number;
+  percent: number;
+}
+
+export function habitWeekProgress(
+  completions: HabitCompletion[],
+  habit: Habit,
+  today: Date = new Date()
+): HabitWeekProgress {
+  const target = habitWeeklyTarget(habit);
+  const weekStart = getWeekStart(today);
+  const startKey = getDayKey(weekStart);
+  const endKey = getDayKey(addDays(weekStart, 6));
+  const todayKey = getDayKey(today);
+  const done = completions.filter(
+    (c) =>
+      c.habit_id === habit.id &&
+      c.completed_date >= startKey &&
+      c.completed_date <= endKey &&
+      c.completed_date <= todayKey
+  ).length;
+  return {
+    done,
+    target,
+    percent: Math.min(100, Math.round((done / target) * 100)),
+  };
+}
+
+function weekCompletionCount(
+  completions: HabitCompletion[],
+  habitId: string,
+  weekStart: Date
+): number {
+  const startKey = getDayKey(weekStart);
+  const endKey = getDayKey(addDays(weekStart, 6));
+  return completions.filter(
+    (c) => c.habit_id === habitId && c.completed_date >= startKey && c.completed_date <= endKey
+  ).length;
+}
+
 export function habitStreak(completions: HabitCompletion[], habit: Habit, today: Date = new Date()): number {
-  if (habit.frequency === 'weekly') {
-    const target = habit.target_days > 0 ? habit.target_days : 1;
-    const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
-    const weekKeys = Array.from({ length: 8 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const count = completions.filter((c) => c.habit_id === habit.id && c.completed_date === key).length;
-      return { key, count };
-    });
+  const target = habitWeeklyTarget(habit);
+
+  if (target < 7) {
+    const currentWeekStart = getWeekStart(today);
+    const createdKey = habit.created_at ? habit.created_at.slice(0, 10) : null;
     let streak = 0;
-    for (let i = weekKeys.length - 1; i >= 0; i--) {
-      if (weekKeys[i].count >= target) streak++;
-      else break;
+    let cursor = currentWeekStart;
+    if (weekCompletionCount(completions, habit.id, cursor) >= target) {
+      streak += 1;
+    }
+    cursor = addDays(currentWeekStart, -7);
+    for (let week = 0; week < 260; week += 1) {
+      const weekEndKey = getDayKey(addDays(cursor, 6));
+      if (createdKey && weekEndKey < createdKey) break;
+      if (weekCompletionCount(completions, habit.id, cursor) >= target) {
+        streak += 1;
+        cursor = addDays(cursor, -7);
+      } else {
+        break;
+      }
     }
     return streak;
   }

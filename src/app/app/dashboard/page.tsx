@@ -10,6 +10,8 @@ import {
   focusMinutesToday,
   getDayKey,
   habitStreak,
+  habitWeekProgress,
+  habitWeeklyTarget,
   overdueTasks,
   overallGoalProgress,
   tasksCompletedOn,
@@ -71,15 +73,11 @@ export default function DashboardPage() {
   const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'there';
 
   const habitsDoneCount = habits.filter((habit) => {
-    if (habit.frequency === 'daily') {
-      return completions.some((completion) => completion.habit_id === habit.id && completion.completed_date === todayKey);
+    if (habitWeeklyTarget(habit) < 7) {
+      const week = habitWeekProgress(completions, habit);
+      return week.done >= week.target;
     }
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
-    const weekKey = getDayKey(weekStart);
-    const count = completions.filter((completion) => completion.habit_id === habit.id && completion.completed_date >= weekKey).length;
-    const target = habit.target_days > 0 ? habit.target_days : 7;
-    return count >= target;
+    return completions.some((completion) => completion.habit_id === habit.id && completion.completed_date === todayKey);
   }).length;
 
   if (!user) {
@@ -389,6 +387,15 @@ export default function DashboardPage() {
                   const done = completions.some(
                     (completion) => completion.habit_id === habit.id && completion.completed_date === todayKey
                   );
+                  const week = habitWeekProgress(completions, habit);
+                  const weekly = habitWeeklyTarget(habit) < 7;
+                  const weekMet = week.done >= week.target;
+                  const label = weekly
+                    ? `${week.done}/${week.target} this week`
+                    : done
+                      ? 'done'
+                      : `${streak}d streak`;
+                  const highlight = weekly ? weekMet : done;
                   return (
                     <div
                       key={habit.id}
@@ -403,8 +410,8 @@ export default function DashboardPage() {
                         </span>
                         <span className="truncate text-text">{habit.name}</span>
                       </span>
-                      <span className={`shrink-0 text-[11px] font-medium ${done ? 'text-success' : 'text-muted'}`}>
-                        {done ? 'done' : `${streak}d streak`}
+                      <span className={cn('shrink-0 text-[11px] font-medium', highlight ? 'text-success' : 'text-muted')}>
+                        {label}
                       </span>
                     </div>
                   );
