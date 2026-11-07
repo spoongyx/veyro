@@ -20,6 +20,42 @@ interface TaskFormModalProps {
   onSaved: () => void;
 }
 
+function Switch({
+  checked,
+  onChange,
+  label,
+  disabled = false,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onChange}
+      className={cn(
+        'relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200',
+        checked ? 'border-accent bg-accent' : 'border-line bg-raised',
+        disabled ? 'cursor-not-allowed opacity-40' : ''
+      )}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 rounded-full shadow-soft transition-all duration-200',
+          checked ? 'left-[22px] bg-accent-contrast' : 'left-0.5 bg-muted'
+        )}
+        style={{ height: 18, width: 18 }}
+      />
+    </button>
+  );
+}
+
 export default function TaskFormModal({ open, onClose, task, onSaved }: TaskFormModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -27,6 +63,8 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
   const [status, setStatus] = useState<TaskStatus>('todo');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('09:00');
+  const [dueDateEnabled, setDueDateEnabled] = useState(true);
+  const [dueTimeEnabled, setDueTimeEnabled] = useState(true);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderTime, setReminderTime] = useState('09:00');
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -36,13 +74,13 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!open || !reminderEnabled) {
+    if (!open || !dueDateEnabled || !reminderEnabled) {
       setReminderInPast(false);
       return;
     }
     const at = new Date(`${dueDate || toISODateKey(new Date())}T${reminderTime || '09:00'}:00`);
     setReminderInPast(!isNaN(at.getTime()) && at.getTime() < Date.now());
-  }, [open, reminderEnabled, dueDate, reminderTime]);
+  }, [open, dueDateEnabled, reminderEnabled, dueDate, reminderTime]);
 
   useEffect(() => {
     if (open) {
@@ -50,9 +88,12 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
       setDescription(task?.description ?? '');
       setPriority(task?.priority ?? 'medium');
       setStatus(task?.status ?? 'todo');
+      const hasDueDate = Boolean(task?.due_date);
       setDueDate(task?.due_date ?? toISODateKey(new Date()));
       setDueTime(task?.due_time ?? '09:00');
-      setReminderEnabled(task ? Boolean(task.reminder_time) : true);
+      setDueDateEnabled(task ? hasDueDate : true);
+      setDueTimeEnabled(task ? hasDueDate && Boolean(task.due_time) : true);
+      setReminderEnabled(task ? hasDueDate && Boolean(task.reminder_time) : true);
       if (task?.reminder_time) {
         const date = new Date(task.reminder_time);
         setReminderTime(
@@ -69,7 +110,21 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
     }
   }, [open, task]);
 
+  const handleDueDateToggle = () => {
+    const next = !dueDateEnabled;
+    setDueDateEnabled(next);
+    if (!next) {
+      setDueTimeEnabled(false);
+      setReminderEnabled(false);
+    }
+  };
+
+  const handleDueTimeToggle = () => {
+    setDueTimeEnabled((value) => !value);
+  };
+
   const handleReminderToggle = async () => {
+    if (!dueDateEnabled) return;
     const next = !reminderEnabled;
     setReminderEnabled(next);
     if (!next) return;
@@ -87,7 +142,23 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
     setSaving(true);
     setError(null);
     try {
-      if (reminderEnabled) {
+      if (dueDateEnabled && !dueDate) {
+        setError('Choose a due date or turn off the due date.');
+        return;
+      }
+      if (dueDateEnabled && dueTimeEnabled && !dueTime) {
+        setError('Choose a due time or turn off the due time.');
+        return;
+      }
+
+      const effectiveDueDate = dueDateEnabled ? dueDate || null : null;
+      const effectiveDueTime = dueDateEnabled && dueTimeEnabled ? dueTime || null : null;
+      const reminderIso =
+        effectiveDueDate && reminderEnabled
+          ? new Date(`${effectiveDueDate}T${reminderTime || '09:00'}:00`).toISOString()
+          : null;
+
+      if (reminderIso) {
         const current = await getNotificationPermission();
         setPermission(current);
         if (current === 'default') {
@@ -95,16 +166,14 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
         }
       }
 
-      const reminderAt = `${dueDate || toISODateKey(new Date())}T${reminderTime || '09:00'}:00`;
-      const reminderIso = reminderEnabled ? new Date(reminderAt).toISOString() : null;
       if (task) {
         const updates: Record<string, unknown> = {
           title: title.trim(),
           description: description.trim() || null,
           priority,
           status,
-          due_date: dueDate || null,
-          due_time: dueTime || null,
+          due_date: effectiveDueDate,
+          due_time: effectiveDueTime,
           reminder_time: reminderIso,
         };
         await updateTask(task.id, updates as Partial<Task>);
@@ -119,8 +188,8 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
           description: description.trim() || null,
           status,
           priority,
-          due_date: dueDate || null,
-          due_time: dueTime || null,
+          due_date: effectiveDueDate,
+          due_time: effectiveDueTime,
           reminder_time: reminderIso,
         });
       }
@@ -167,12 +236,33 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Due date</label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label className="block text-sm font-medium">Due date</label>
+              <Switch checked={dueDateEnabled} onChange={handleDueDateToggle} label="Toggle due date" />
+            </div>
+            {dueDateEnabled ? (
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            ) : (
+              <p className="px-1 py-2 text-xs text-muted">Not set</p>
+            )}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Due time</label>
-            <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label className={cn('block text-sm font-medium', !dueDateEnabled && 'text-muted')}>
+                Due time
+              </label>
+              <Switch
+                checked={dueTimeEnabled && dueDateEnabled}
+                onChange={handleDueTimeToggle}
+                label="Toggle due time"
+                disabled={!dueDateEnabled}
+              />
+            </div>
+            {dueDateEnabled && dueTimeEnabled ? (
+              <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+            ) : (
+              <p className="px-1 py-2 text-xs text-muted">Not set</p>
+            )}
           </div>
         </div>
         <div className="rounded-xl border border-line/70 bg-raised/30 px-3.5 py-3">
@@ -180,38 +270,27 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
             <div>
               <p className="text-sm font-medium">Time reminder</p>
               <p className="mt-0.5 text-xs leading-5 text-muted">
-                {!reminderEnabled
-                  ? 'No reminder will be sent for this task.'
-                  : permission === 'granted'
-                    ? 'A browser alert will be sent at this time while Veyro is open.'
-                    : permission === 'denied'
-                      ? 'Notifications are blocked. Allow them in your browser settings to receive this alert.'
-                      : permission === 'unsupported'
-                        ? 'This browser does not support notifications.'
-                        : 'You will be asked to allow browser notifications when you save.'}
+                {!dueDateEnabled
+                  ? 'Add a due date to use a reminder.'
+                  : !reminderEnabled
+                    ? 'No reminder will be sent for this task.'
+                    : permission === 'granted'
+                      ? 'A browser alert will be sent at this time while Veyro is open.'
+                      : permission === 'denied'
+                        ? 'Notifications are blocked. Allow them in your browser settings to receive this alert.'
+                        : permission === 'unsupported'
+                          ? 'This browser does not support notifications.'
+                          : 'You will be asked to allow browser notifications when you save.'}
               </p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={reminderEnabled}
-              aria-label="Toggle time reminder"
-              onClick={() => void handleReminderToggle()}
-              className={cn(
-                'relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200',
-                reminderEnabled ? 'border-accent bg-accent' : 'border-line bg-raised'
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 rounded-full shadow-soft transition-all duration-200',
-                  reminderEnabled ? 'left-[22px] bg-accent-contrast' : 'left-0.5 bg-muted'
-                )}
-                style={{ height: 18, width: 18 }}
-              />
-            </button>
+            <Switch
+              checked={reminderEnabled && dueDateEnabled}
+              onChange={() => void handleReminderToggle()}
+              label="Toggle time reminder"
+              disabled={!dueDateEnabled}
+            />
           </div>
-          {reminderEnabled && (
+          {dueDateEnabled && reminderEnabled && (
             <div className="mt-3 space-y-1.5">
               <Input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
               {reminderInPast && (
