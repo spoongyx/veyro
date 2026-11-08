@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { BrandMark, BrandVersion } from '@/components/brand';
+import { DownloadAppButton } from '@/components/pwa';
 import { ThemeToggle } from '@/components/theme/ThemeSwitcher';
 
 const FEATURES = [
@@ -96,6 +97,7 @@ export default function LandingPage() {
           >
             Start free
           </Link>
+          <DownloadAppButton className="rounded-2xl px-6 py-3.5 text-base font-semibold" />
           <Link
             href="/auth/login"
             className="rounded-2xl border border-line px-6 py-3.5 text-base font-semibold transition-colors hover:bg-raised"

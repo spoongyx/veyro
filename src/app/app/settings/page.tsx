@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AtSign, Bell, BellRing, Camera, Check, Moon, Sun, UserRound, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useUsernameAvailability } from '@/lib/hooks/use-username-availability';
-import { InstallButton } from '@/components/pwa';
+import { DownloadAppButton } from '@/components/pwa';
 import { UsernameStatusLine } from '@/components/profile/UsernameStatusLine';
 import { Avatar, Badge, Button, Card, Input, Reveal, SectionHeading } from '@/components/ui';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -434,7 +434,7 @@ export default function SettingsPage() {
             description="Add Ascned to your home screen and keep working when the signal drops."
           />
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <InstallButton />
+            <DownloadAppButton label="Install app" />
             <span className="text-sm text-muted">
               {online ? 'Everything is up to date.' : 'Offline - changes will sync later.'}
             </span>
