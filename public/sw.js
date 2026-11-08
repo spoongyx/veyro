@@ -58,6 +58,60 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function notificationTarget(value) {
+  try {
+    const url = new URL(typeof value === 'string' ? value : '/app/tasks', self.location.origin);
+    if (url.origin !== self.location.origin) return '/app/tasks';
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return '/app/tasks';
+  }
+}
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { body: event.data ? event.data.text() : '' };
+  }
+
+  const title = typeof payload.title === 'string' && payload.title ? payload.title : 'Ascned reminder';
+  const options = {
+    body:
+      typeof payload.body === 'string' && payload.body
+        ? payload.body
+        : 'You have a reminder waiting in Ascned.',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: typeof payload.tag === 'string' && payload.tag ? payload.tag : 'ascned-reminder',
+    data: { url: notificationTarget(payload.url) },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = notificationTarget(event.notification.data && event.notification.data.url);
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) => {
+        for (const client of clients) {
+          if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+            if ('navigate' in client) {
+              client.navigate(target).catch(() => {});
+            }
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(target);
+      })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;

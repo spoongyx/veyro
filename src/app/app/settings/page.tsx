@@ -17,6 +17,11 @@ import {
   type NotificationPermission,
 } from '@/lib/notifications';
 import {
+  enablePushNotifications,
+  hasPushSubscription,
+  setPushRemindersEnabled,
+} from '@/lib/push';
+import {
   USERNAME_MAX_LENGTH,
   normalizeUsername,
   uploadAvatar,
@@ -252,14 +257,28 @@ export default function SettingsPage() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [settings, setSettings] = useState<AppNotificationSettings>(loadNotificationSettings);
   const [online, setOnline] = useState(true);
+  const [pushReady, setPushReady] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushNotice, setPushNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    void getNotificationPermission().then(setPermission);
+    let cancelled = false;
+
+    void getNotificationPermission().then(async (next) => {
+      if (cancelled) return;
+      setPermission(next);
+      if (next === 'granted') {
+        const connected = await hasPushSubscription();
+        if (!cancelled) setPushReady(connected);
+      }
+    });
+
     const update = () => setOnline(isOnline());
     update();
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
     return () => {
+      cancelled = true;
       window.removeEventListener('online', update);
       window.removeEventListener('offline', update);
     };
@@ -272,14 +291,54 @@ export default function SettingsPage() {
   };
 
   const handleEnableNotifications = async () => {
-    const result = await requestNotificationPermission();
-    setPermission(result);
-    return result;
+    setPushBusy(true);
+    setPushNotice(null);
+    try {
+      const result = await enablePushNotifications();
+      const nextPermission = await getNotificationPermission();
+      setPermission(nextPermission);
+
+      if (!result.ok) {
+        setPushReady(false);
+        setPushNotice({ tone: 'error', text: result.message });
+        return;
+      }
+
+      setPushReady(true);
+      updateSetting('reminders', true);
+      setPushNotice({
+        tone: 'success',
+        text: 'Background reminders are on. Ascned can now alert you even when it is closed.',
+      });
+    } finally {
+      setPushBusy(false);
+    }
   };
 
   const toggleReminderSetting = async (key: 'reminders' | 'pomodoroAlerts', value: boolean) => {
+    if (key === 'reminders') {
+      if (value) {
+        await handleEnableNotifications();
+        return;
+      }
+
+      updateSetting('reminders', false);
+      setPushReady(false);
+      setPushNotice(null);
+      try {
+        await setPushRemindersEnabled(false);
+      } catch {
+        setPushNotice({
+          tone: 'error',
+          text: 'Reminders are off on this device, but the server could not be updated. Try again when online.',
+        });
+      }
+      return;
+    }
+
     if (value && permission === 'default') {
-      const result = await handleEnableNotifications();
+      const result = await requestNotificationPermission();
+      setPermission(result);
       if (result !== 'granted') return;
     }
     updateSetting(key, value);
@@ -381,12 +440,15 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between gap-5 py-4 first:pt-0">
               <div>
                 <p className="text-sm font-medium text-text">Task reminders</p>
-                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due (Ascned must be open). Turn off to silence all task reminders.</p>
+                <p className="mt-0.5 text-xs leading-5 text-muted">
+                  Sent even when Ascned is closed. On iPhone, install Ascned to your Home Screen
+                  first. Turn off to silence all task reminders.
+                </p>
               </div>
               <Toggle
                 checked={settings.reminders}
                 onChange={(v) => void toggleReminderSetting('reminders', v)}
-                disabled={permission === 'unsupported'}
+                disabled={permission === 'unsupported' || pushBusy}
               />
             </div>
             <div className="flex items-center justify-between gap-5 py-4">
@@ -411,14 +473,35 @@ export default function SettingsPage() {
               <Toggle checked={settings.dailySummary} onChange={(v) => updateSetting('dailySummary', v)} disabled />
             </div>
           </div>
+          {pushNotice ? (
+            <div
+              className={cn(
+                'mt-2 rounded-xl border px-3 py-2 text-sm',
+                pushNotice.tone === 'success'
+                  ? 'border-success/30 bg-success/10 text-success'
+                  : 'border-danger/30 bg-danger/10 text-danger'
+              )}
+            >
+              {pushNotice.text}
+            </div>
+          ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-line/60 pt-4">
-            <Button onClick={() => void handleEnableNotifications()} disabled={permission === 'granted'} size="sm">
-              {permission === 'granted' ? (
+            <Button
+              onClick={() => void handleEnableNotifications()}
+              disabled={permission === 'unsupported' || pushReady}
+              loading={pushBusy}
+              size="sm"
+            >
+              {pushReady ? (
                 <>
-                  <BellRing size={15} /> Notifications enabled
+                  <BellRing size={15} /> Background reminders on
+                </>
+              ) : permission === 'granted' ? (
+                <>
+                  <BellRing size={15} /> Finish background setup
                 </>
               ) : (
-                'Enable notifications'
+                'Enable background reminders'
               )}
             </Button>
             <span className="text-xs capitalize text-muted">Permission: {permission}</span>

@@ -8,6 +8,7 @@ import {
   requestNotificationPermission,
   type NotificationPermission,
 } from '@/lib/notifications';
+import { ensurePushSubscription } from '@/lib/push';
 import type { Task, TaskPriority, TaskStatus } from '@/lib/types';
 import { Button, Input, Modal, Select, Textarea } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
@@ -125,14 +126,17 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
 
   const handleReminderToggle = async () => {
     if (!dueDateEnabled) return;
-    const next = !reminderEnabled;
-    setReminderEnabled(next);
-    if (!next) return;
+    const shouldEnable = !reminderEnabled;
+    setReminderEnabled(shouldEnable);
+    if (!shouldEnable) return;
 
-    const current = await getNotificationPermission();
-    setPermission(current);
-    if (current === 'default') {
-      setPermission(await requestNotificationPermission());
+    let nextPermission = await getNotificationPermission();
+    if (nextPermission === 'default') {
+      nextPermission = await requestNotificationPermission();
+    }
+    setPermission(nextPermission);
+    if (nextPermission === 'granted') {
+      void ensurePushSubscription({ remindersEnabled: true });
     }
   };
 
@@ -159,10 +163,13 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
           : null;
 
       if (reminderIso) {
-        const current = await getNotificationPermission();
-        setPermission(current);
-        if (current === 'default') {
-          setPermission(await requestNotificationPermission());
+        let next = await getNotificationPermission();
+        if (next === 'default') {
+          next = await requestNotificationPermission();
+        }
+        setPermission(next);
+        if (next === 'granted') {
+          void ensurePushSubscription({ remindersEnabled: true });
         }
       }
 
@@ -275,7 +282,7 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
                   : !reminderEnabled
                     ? 'No reminder will be sent for this task.'
                     : permission === 'granted'
-                      ? 'A browser alert will be sent at this time while Ascned is open.'
+                      ? 'A notification will be sent at this time, even when Ascned is closed.'
                       : permission === 'denied'
                         ? 'Notifications are blocked. Allow them in your browser settings to receive this alert.'
                         : permission === 'unsupported'

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { clearOfflineData } from '@/lib/offline';
+import { removePushSubscription } from '@/lib/push';
 import { authCallbackUrl } from '@/lib/utils/auth-redirect';
 import type { Profile, User } from '@/lib/types';
 
@@ -93,6 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     const supabase = createClient();
+    try {
+      await removePushSubscription();
+    } catch {
+      // Push cleanup is best-effort; signing out should always proceed.
+    }
     await supabase.auth.signOut();
     clearOfflineData();
     if (typeof window !== 'undefined' && 'caches' in window) {
