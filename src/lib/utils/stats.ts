@@ -152,8 +152,18 @@ export function habitStreak(completions: HabitCompletion[], habit: Habit, today:
   return streak;
 }
 
-export function habitConsistency(completions: HabitCompletion[], habit: Habit, weeks = 12): boolean[] {
-  const out: boolean[] = [];
+export interface HabitConsistencyDay {
+  dateKey: string;
+  done: boolean;
+  inRange: boolean;
+}
+
+export function habitConsistencyDays(
+  completions: HabitCompletion[],
+  habit: Habit,
+  weeks = 12
+): HabitConsistencyDay[] {
+  const out: HabitConsistencyDay[] = [];
   const today = startOfDay(new Date());
   const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
   weekStart.setDate(weekStart.getDate() - (weeks - 1) * 7);
@@ -165,9 +175,14 @@ export function habitConsistency(completions: HabitCompletion[], habit: Habit, w
   for (let i = 0; i < weeks * 7; i++) {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
-    out.push(d <= today && completedKeys.has(getDayKey(d)));
+    const dateKey = getDayKey(d);
+    out.push({ dateKey, done: completedKeys.has(dateKey), inRange: d <= today });
   }
   return out;
+}
+
+export function habitConsistency(completions: HabitCompletion[], habit: Habit, weeks = 12): boolean[] {
+  return habitConsistencyDays(completions, habit, weeks).map((day) => day.done && day.inRange);
 }
 
 export function focusMinutesToday(sessions: FocusSession[]): number {

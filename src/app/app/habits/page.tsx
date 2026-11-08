@@ -1,10 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, Flame, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Check, Flame, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useHabits } from '@/lib/hooks/use-entities';
-import { getDayKey, habitConsistency, habitStreak, habitWeekProgress, habitWeeklyTarget } from '@/lib/utils/stats';
+import {
+  getDayKey,
+  habitConsistencyDays,
+  habitStreak,
+  habitWeekProgress,
+  habitWeeklyTarget,
+  type HabitConsistencyDay,
+} from '@/lib/utils/stats';
 import { habitCompletionRate, habitRate } from '@/lib/utils/analytics';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -30,18 +37,38 @@ export default function HabitsPage() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Habit | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [pendingDay, setPendingDay] = useState<string | null>(null);
 
   const todayKey = getDayKey(new Date());
   const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? habits[0] ?? null;
 
-  const consistency = useMemo(() => {
-    if (!selectedHabit) return [] as boolean[][];
-    const flat = habitConsistency(completions, selectedHabit, 12);
-    const weeks: boolean[][] = [];
+  const consistencyWeeks = useMemo(() => {
+    if (!selectedHabit) return [] as HabitConsistencyDay[][];
+    const flat = habitConsistencyDays(completions, selectedHabit, 12);
+    const weeks: HabitConsistencyDay[][] = [];
     for (let i = 0; i < flat.length; i += 7) {
       weeks.push(flat.slice(i, i + 7));
     }
     return weeks;
+  }, [completions, selectedHabit]);
+
+  const recentDays = useMemo(() => {
+    if (!selectedHabit) return [];
+    const now = new Date();
+    return Array.from({ length: 7 }, (_, offset) => {
+      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
+      const dateKey = getDayKey(day);
+      return {
+        dateKey,
+        done: completions.some(
+          (completion) => completion.habit_id === selectedHabit.id && completion.completed_date === dateKey
+        ),
+        isToday: offset === 0,
+        weekday: day.toLocaleDateString('en-US', { weekday: 'short' }),
+        dateNumber: day.getDate(),
+        fullLabel: day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
+      };
+    });
   }, [completions, selectedHabit]);
 
   const doneToday = habits.filter((habit) =>
@@ -57,16 +84,25 @@ export default function HabitsPage() {
   const selectedWeek = selectedHabit ? habitWeekProgress(completions, selectedHabit) : null;
   const selectedStreakUnit = selectedHabit && habitWeeklyTarget(selectedHabit) < 7 ? 'w' : 'd';
 
-  const handleToggle = async (habit: Habit) => {
-    const existing = completions.find(
-      (completion) => completion.habit_id === habit.id && completion.completed_date === todayKey
-    );
-    if (existing) {
-      await unmarkComplete(existing);
-    } else {
-      await markComplete(habit, todayKey);
+  const handleToggleDay = async (habit: Habit, dateKey: string) => {
+    const pendingKey = `${habit.id}:${dateKey}`;
+    if (pendingDay === pendingKey) return;
+    setPendingDay(pendingKey);
+    try {
+      const existing = completions.find(
+        (completion) => completion.habit_id === habit.id && completion.completed_date === dateKey
+      );
+      if (existing) {
+        await unmarkComplete(existing);
+      } else {
+        await markComplete(habit, dateKey);
+      }
+    } finally {
+      setPendingDay(null);
     }
   };
+
+  const handleToggle = (habit: Habit) => handleToggleDay(habit, todayKey);
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -253,14 +289,15 @@ export default function HabitsPage() {
             <div className="lg:col-span-2">
               {selectedHabit ? (
                 <Reveal delay={100}>
-                  <Card className="relative overflow-hidden p-5 sm:p-6 lg:sticky lg:top-24">
+                  <Card className="relative overflow-hidden p-0 lg:sticky lg:top-24">
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-accent/[0.06] blur-3xl"
                     />
-                    <SectionHeading
-                      title={selectedHabit.name}
-                      description="Last 12 weeks of consistency"
+                    <div className="relative p-5 sm:p-6 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:[scrollbar-width:thin]">
+                      <SectionHeading
+                        title={selectedHabit.name}
+                        description="Last 12 weeks · tap a day to edit"
                       action={
                         <button
                           onClick={() => {
@@ -295,8 +332,71 @@ export default function HabitsPage() {
                         </p>
                       </div>
                     </div>
+                    <div className="mt-5 rounded-2xl border border-line/70 bg-surface/60 p-3">
+                      <div className="flex items-center justify-between gap-2 px-0.5">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">Last 7 days</p>
+                        <p className="text-[10px] text-muted">Tap to edit</p>
+                      </div>
+                      <div className="mt-2 grid grid-cols-7 gap-1">
+                        {recentDays.map((day) => {
+                          const pending = pendingDay === `${selectedHabit.id}:${day.dateKey}`;
+                          return (
+                            <button
+                              key={day.dateKey}
+                              type="button"
+                              onClick={() => void handleToggleDay(selectedHabit, day.dateKey)}
+                              disabled={pending}
+                              aria-pressed={day.done}
+                              aria-label={`${day.fullLabel}: ${day.done ? 'completed' : 'not completed'}. Click to ${
+                                day.done ? 'uncheck' : 'check'
+                              }.`}
+                              title={`${day.fullLabel} · ${day.done ? 'Completed' : 'Not completed'}`}
+                              className={cn(
+                                'group flex flex-col items-center gap-1.5 rounded-xl px-0.5 py-2 transition-colors disabled:opacity-60',
+                                !day.done && 'hover:bg-raised/70'
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'text-[9px] font-semibold uppercase tracking-[0.08em]',
+                                  day.done ? 'text-text' : day.isToday ? 'text-accent' : 'text-muted'
+                                )}
+                              >
+                                {day.isToday ? 'Today' : day.weekday}
+                              </span>
+                              <span
+                                className={cn(
+                                  'flex h-8 w-8 items-center justify-center rounded-full border text-[11px] font-semibold tabular-nums transition-all',
+                                  day.done
+                                    ? 'border-accent bg-accent text-accent-contrast shadow-[0_0_18px_-8px_rgb(var(--accent)/0.9)]'
+                                    : cn(
+                                        'border-line/80 bg-ink/30 text-muted group-hover:border-accent/50',
+                                        day.isToday && 'border-accent/60 bg-accent/[0.06] text-accent'
+                                      )
+                                )}
+                              >
+                                {pending ? (
+                                  <Loader2
+                                    size={13}
+                                    className={cn('animate-spin', day.done ? 'text-accent-contrast' : 'text-accent')}
+                                  />
+                                ) : day.done ? (
+                                  <Check size={14} strokeWidth={3} />
+                                ) : (
+                                  day.dateNumber
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div className="mt-5">
-                      <Heatmap weeks={consistency} color={selectedHabit.color} />
+                      <Heatmap
+                        weeks={consistencyWeeks}
+                        color={selectedHabit.color}
+                        onToggleDay={(dateKey) => void handleToggleDay(selectedHabit, dateKey)}
+                      />
                     </div>
                     <div className="mt-4 flex items-center justify-between text-[10px] text-muted">
                       <span>12 weeks ago</span>
@@ -310,6 +410,7 @@ export default function HabitsPage() {
                         More
                       </span>
                       <span>Today</span>
+                    </div>
                     </div>
                   </Card>
                 </Reveal>

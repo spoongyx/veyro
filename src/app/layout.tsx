@@ -14,21 +14,21 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? vercelUrl ?? 'http://localhos
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: 'Veyro - Focus, simplified', template: '%s - Veyro' },
-  description: 'Veyro is a calm productivity workspace for tasks, habits, goals and deep work.',
-  applicationName: 'Veyro',
+  title: { default: 'Ascned - Focus, simplified', template: '%s - Ascned' },
+  description: 'Ascned is a calm productivity workspace for tasks, habits, goals and deep work.',
+  applicationName: 'Ascned',
   manifest: '/manifest.webmanifest',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    siteName: 'Veyro',
-    title: 'Veyro - Focus, simplified',
+    siteName: 'Ascned',
+    title: 'Ascned - Focus, simplified',
     description: 'A calm productivity workspace for tasks, habits, goals and deep work.',
     url: '/',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Veyro - Focus, simplified',
+    title: 'Ascned - Focus, simplified',
     description: 'A calm productivity workspace for tasks, habits, goals and deep work.',
   },
 };
@@ -47,9 +47,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Veyro" />
+        <meta name="apple-mobile-web-app-title" content="Ascned" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <script
           dangerouslySetInnerHTML={{
@@ -57,9 +58,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 (function () {
   try {
     var stored = null;
-    try { stored = localStorage.getItem('veyro-theme'); } catch (e) {}
+    try { stored = localStorage.getItem('ascned-theme') || localStorage.getItem('veyro-theme'); } catch (e) {}
     if (!stored) {
-      var match = document.cookie.match(/(?:^|; )veyro-theme=([^;]*)/);
+      var match =
+        document.cookie.match(/(?:^|; )ascned-theme=([^;]*)/) ||
+        document.cookie.match(/(?:^|; )veyro-theme=([^;]*)/);
       if (match) {
         try { stored = decodeURIComponent(match[1]); } catch (e) { stored = match[1]; }
       }

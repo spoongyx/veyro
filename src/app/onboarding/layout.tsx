@@ -5,5 +5,5 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 }
 
 export const metadata = {
-  title: 'Welcome · Veyro',
+  title: 'Welcome · Ascned',
 };

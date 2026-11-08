@@ -275,7 +275,7 @@ export default function TaskFormModal({ open, onClose, task, onSaved }: TaskForm
                   : !reminderEnabled
                     ? 'No reminder will be sent for this task.'
                     : permission === 'granted'
-                      ? 'A browser alert will be sent at this time while Veyro is open.'
+                      ? 'A browser alert will be sent at this time while Ascned is open.'
                       : permission === 'denied'
                         ? 'Notifications are blocked. Allow them in your browser settings to receive this alert.'
                         : permission === 'unsupported'

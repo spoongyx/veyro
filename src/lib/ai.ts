@@ -58,9 +58,9 @@ async function readError(response: Response): Promise<string> {
     // ignore
   }
   if (response.status === 404) {
-    return 'Veyro AI backend is not deployed yet. Deploy the ai-chat function to your Supabase project.';
+    return 'Ascned AI backend is not deployed yet. Deploy the ai-chat function to your Supabase project.';
   }
-  return `Veyro AI request failed (${response.status}). Please try again.`;
+  return `Ascned AI request failed (${response.status}). Please try again.`;
 }
 
 export function localTodayKey(): string {
@@ -130,7 +130,7 @@ export async function streamAiChat(
       doneReceived = true;
       callbacks.onDone?.(data);
     } else if (event === 'error') {
-      throw new Error(typeof data.message === 'string' ? data.message : 'Veyro AI could not answer.');
+      throw new Error(typeof data.message === 'string' ? data.message : 'Ascned AI could not answer.');
     }
   };
 

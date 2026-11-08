@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { BrandMark, BrandVersion } from '@/components/brand';
 
 export default function AuthShell({
   subtitle,
@@ -22,14 +23,15 @@ export default function AuthShell({
       />
       <div className="relative w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Link href="/" aria-label="Veyro home" className="group flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-base font-bold text-accent-contrast shadow-[0_0_32px_-8px_rgb(var(--accent)/0.9)] transition-transform duration-200 group-hover:scale-105"
-            >
-              V
+          <Link href="/" aria-label="Ascned home" className="group flex items-center gap-2.5">
+            <BrandMark
+              className="h-10 w-10 transition-transform duration-200 group-hover:scale-105"
+              priority
+            />
+            <span className="flex items-center gap-1.5">
+              <span className="text-xl font-semibold tracking-tight text-text">Ascned</span>
+              <BrandVersion />
             </span>
-            <span className="text-xl font-semibold tracking-tight text-text">Veyro</span>
           </Link>
           <p className="mt-3 text-sm text-muted">{subtitle}</p>
         </div>

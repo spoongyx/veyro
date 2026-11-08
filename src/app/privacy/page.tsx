@@ -3,16 +3,16 @@ import { LegalPage } from '@/components/legal-page';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Veyro collects, uses and protects your data.',
+  description: 'How Ascned collects, uses and protects your data.',
 };
 
 export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy">
       <section>
-        <h2>What Veyro is</h2>
+        <h2>What Ascned is</h2>
         <p>
-          Veyro is a personal productivity workspace for tasks, habits, goals and focus sessions. This policy
+          Ascned is a personal productivity workspace for tasks, habits, goals and focus sessions. This policy
           explains what data the service handles and the choices you have.
         </p>
       </section>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
       <section>
         <h2>Cookies and local storage</h2>
         <p>
-          Veyro uses cookies for authentication and your theme choice, and browser storage for preferences and the
+          Ascned uses cookies for authentication and your theme choice, and browser storage for preferences and the
           offline queue. There are no advertising or third-party analytics cookies. Clearing site data signs you out
           and removes local preferences.
         </p>
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
       <section>
         <h2>Children</h2>
         <p>
-          Veyro is not directed at children under 13, and we do not knowingly collect personal data from them.
+          Ascned is not directed at children under 13, and we do not knowingly collect personal data from them.
         </p>
       </section>
 
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
         <p>
           Questions or requests about your data can be sent through the{' '}
           <a href="https://github.com/spoongyx/veyro/issues" target="_blank" rel="noopener noreferrer">
-            Veyro support page
+            Ascned support page
           </a>
           .
         </p>

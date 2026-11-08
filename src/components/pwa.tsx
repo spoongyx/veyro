@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 
@@ -9,11 +9,11 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     promptEvent = e;
-    window.dispatchEvent(new Event('veyro:install-available'));
+    window.dispatchEvent(new Event('ascned:install-available'));
   });
   window.addEventListener('appinstalled', () => {
     promptEvent = null;
-    window.dispatchEvent(new Event('veyro:install-unavailable'));
+    window.dispatchEvent(new Event('ascned:install-unavailable'));
   });
 }
 
@@ -23,11 +23,11 @@ export function useInstall(): { canInstall: boolean; install: () => Promise<bool
   useEffect(() => {
     const sync = () => setCanInstall(Boolean(promptEvent));
     sync();
-    window.addEventListener('veyro:install-available', sync);
-    window.addEventListener('veyro:install-unavailable', sync);
+    window.addEventListener('ascned:install-available', sync);
+    window.addEventListener('ascned:install-unavailable', sync);
     return () => {
-      window.removeEventListener('veyro:install-available', sync);
-      window.removeEventListener('veyro:install-unavailable', sync);
+      window.removeEventListener('ascned:install-available', sync);
+      window.removeEventListener('ascned:install-unavailable', sync);
     };
   }, []);
 
@@ -70,7 +70,7 @@ export function InstallButton() {
       onClick={async () => {
         const ok = await install();
         if (!ok) {
-          window.dispatchEvent(new Event('veyro:install-unavailable'));
+          window.dispatchEvent(new Event('ascned:install-unavailable'));
         }
       }}
       className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-text transition-colors hover:bg-raised"

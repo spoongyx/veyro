@@ -12,6 +12,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Card } from '@/components/ui';
+import { BrandMark, BrandVersion } from '@/components/brand';
 import { ThemeToggle } from '@/components/theme/ThemeSwitcher';
 
 const FEATURES = [
@@ -29,7 +30,7 @@ const TRUST = [
     title: 'Cloud sync',
     body: 'Your workspace syncs securely to the cloud, so everything stays available across devices.',
   },
-  { icon: Smartphone, title: 'Installable PWA', body: 'Use Veyro on desktop and mobile like a native app.' },
+  { icon: Smartphone, title: 'Installable PWA', body: 'Use Ascned on desktop and mobile like a native app.' },
 ];
 
 const PREVIEW_NAV = [
@@ -52,14 +53,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen min-h-dvh bg-ink text-text">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 pb-5 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6">
-        <Link href="/" aria-label="Veyro home" className="flex items-center gap-2.5">
-          <span
-            aria-hidden="true"
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-contrast"
-          >
-            V
+        <Link href="/" aria-label="Ascned home" className="flex items-center gap-2.5">
+          <BrandMark className="h-8 w-8" priority />
+          <span className="flex items-center gap-1.5">
+            <span className="text-xl font-bold tracking-tight">Ascned</span>
+            <BrandVersion className="hidden sm:inline-flex" />
           </span>
-          <span className="text-xl font-bold tracking-tight">Veyro</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
@@ -88,7 +87,7 @@ export default function LandingPage() {
           Focus, simplified.
         </h1>
         <p className="mt-6 max-w-xl text-balance text-lg leading-8 text-muted">
-          Veyro is a calm productivity workspace for tasks, habits, goals and deep work — installable as an app.
+          Ascned is a calm productivity workspace for tasks, habits, goals and deep work — installable as an app.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
@@ -112,10 +111,10 @@ export default function LandingPage() {
             className="pointer-events-none absolute inset-x-10 top-8 bottom-6 rounded-[36px] bg-accent/[0.07] blur-3xl"
           />
           <h2 id="preview-heading" className="sr-only">
-            Veyro dashboard preview
+            Ascned dashboard preview
           </h2>
           <p className="sr-only">
-            Preview of the Veyro dashboard showing tasks, habit streak and focus time.
+            Preview of the Ascned dashboard showing tasks, habit streak and focus time.
           </p>
           <div aria-hidden="true" className="surface-card relative overflow-hidden p-2 sm:p-3">
             <div className="rounded-[18px] border border-line bg-ink/80">
@@ -124,7 +123,7 @@ export default function LandingPage() {
                   <span className="h-2.5 w-2.5 rounded-full bg-danger/70" />
                   <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
                   <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
-                  <span className="ml-2 text-xs font-medium text-muted">veyro / dashboard</span>
+                  <span className="ml-2 text-xs font-medium text-muted">ascned / dashboard</span>
                 </div>
                 <span className="rounded-full border border-line px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted">
                   Preview
@@ -228,7 +227,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-sm text-muted sm:flex-row sm:px-6">
-          <p>Veyro — a calm place to get things done.</p>
+          <p>Ascned — a calm place to get things done.</p>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="transition-colors hover:text-text">
               Privacy

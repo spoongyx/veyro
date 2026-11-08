@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Avatar } from '@/components/ui';
+import { BrandMark, BrandVersion } from '@/components/brand';
 import { ThemeQuickSwitch, ThemeToggle } from '@/components/theme/ThemeSwitcher';
 import { cn } from '@/lib/utils/cn';
 
@@ -34,7 +35,7 @@ const NAV_ITEMS = [
 
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((item) => item.href !== '/app/settings');
 
-const COLLAPSE_KEY = 'veyro-nav-collapsed';
+const COLLAPSE_KEY = 'ascned-nav-collapsed';
 
 function getPageTitle(pathname: string): string {
   if (pathname === '/app/dashboard') return 'Dashboard';
@@ -44,7 +45,7 @@ function getPageTitle(pathname: string): string {
     const found = NAV_ITEMS.find((n) => n.href === `/app/${seg}`);
     if (found) return found.label;
   }
-  return 'Veyro';
+  return 'Ascned';
 }
 
 export function LogoutButton({ compact = false }: { compact?: boolean }) {
@@ -90,11 +91,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
   const title = getPageTitle(pathname);
   const [collapsed, setCollapsed] = useState(false);
-  const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Veyro member';
+  const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Ascned member';
 
   useEffect(() => {
     try {
-      setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === '1');
+      setCollapsed(
+        (window.localStorage.getItem(COLLAPSE_KEY) ?? window.localStorage.getItem('veyro-nav-collapsed')) === '1'
+      );
     } catch {
       // Storage can be unavailable in private contexts.
     }
@@ -129,16 +132,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className={cn('flex h-16 items-center border-b border-line/60', collapsed ? 'justify-center px-3' : 'justify-between px-5')}>
           <Link
             href="/app/dashboard"
-            aria-label="Veyro dashboard"
+            aria-label="Ascned dashboard"
             className={cn('group flex items-center gap-2.5', collapsed && 'justify-center')}
           >
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-contrast shadow-[0_0_24px_-6px_rgb(var(--accent)/0.8)] transition-transform duration-200 group-hover:scale-105"
-            >
-              V
-            </span>
-            {!collapsed ? <span className="text-lg font-semibold tracking-tight text-text">Veyro</span> : null}
+            <BrandMark className="h-8 w-8 transition-transform duration-200 group-hover:scale-105" />
+            {!collapsed ? (
+              <span className="flex items-center gap-1.5">
+                <span className="text-lg font-semibold tracking-tight text-text">Ascned</span>
+                <BrandVersion />
+              </span>
+            ) : null}
           </Link>
           {!collapsed ? (
             <button
@@ -253,14 +256,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-line/70 bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
-        <Link href="/app/dashboard" aria-label="Veyro dashboard" className="flex items-center gap-2 text-base font-semibold text-text">
-          <span
-            aria-hidden="true"
-            className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-[10px] font-bold text-accent-contrast"
-          >
-            V
+        <Link href="/app/dashboard" aria-label="Ascned dashboard" className="flex items-center gap-2 text-base font-semibold text-text">
+          <BrandMark className="h-7 w-7" />
+          <span className="flex items-center gap-1.5">
+            Ascned
+            <BrandVersion />
           </span>
-          Veyro
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />

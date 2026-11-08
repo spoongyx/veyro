@@ -6,7 +6,8 @@ export interface QueuedOp {
   created_at: string;
 }
 
-const PREFIX = 'veyro-offline-';
+const PREFIX = 'ascned-offline-';
+const LEGACY_PREFIX = 'veyro-offline-';
 
 export function isOnline(): boolean {
   if (typeof navigator === 'undefined') return true;
@@ -16,7 +17,8 @@ export function isOnline(): boolean {
 export function readCache<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
-    const raw = window.localStorage.getItem(PREFIX + key);
+    const raw =
+      window.localStorage.getItem(PREFIX + key) ?? window.localStorage.getItem(LEGACY_PREFIX + key);
     if (!raw) return fallback;
     return JSON.parse(raw) as T;
   } catch {
@@ -39,7 +41,9 @@ export function getQueue(): QueuedOp[] {
 }
 
 export function clearQueue(): void {
-  if (typeof window !== 'undefined') window.localStorage.removeItem(PREFIX + 'queue');
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(PREFIX + 'queue');
+  window.localStorage.removeItem(LEGACY_PREFIX + 'queue');
 }
 
 export function enqueueOp(op: { entity: string; action: string; payload: unknown }): void {
@@ -89,14 +93,17 @@ export async function flushOfflineQueue(userId: string): Promise<{ synced: numbe
 
 export function clearCachedData(keys: string[]): void {
   if (typeof window === 'undefined') return;
-  keys.forEach((k) => window.localStorage.removeItem(PREFIX + k));
+  keys.forEach((k) => {
+    window.localStorage.removeItem(PREFIX + k);
+    window.localStorage.removeItem(LEGACY_PREFIX + k);
+  });
 }
 
 export function clearOfflineData(): void {
   if (typeof window === 'undefined') return;
   try {
     Object.keys(window.localStorage)
-      .filter((key) => key.startsWith(PREFIX))
+      .filter((key) => key.startsWith(PREFIX) || key.startsWith(LEGACY_PREFIX))
       .forEach((key) => window.localStorage.removeItem(key));
   } catch {
     // Storage unavailable — nothing to clear.

@@ -117,7 +117,7 @@ function buildContext(
 
 function systemPrompt(context: unknown, today: string, timeZone: string): string {
   return [
-    'You are Veyro AI, the personal productivity assistant built into the Veyro app.',
+    'You are Ascned AI, the personal productivity assistant built into the Ascned app.',
     'You help the user understand and improve their tasks, habits, goals, focus time and consistency.',
     '',
     `Today is ${today} in the user's timezone (${timeZone}). Use dates in YYYY-MM-DD format.`,
@@ -161,7 +161,7 @@ Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get('Authorization') ?? '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   if (!token) {
-    return jsonResponse({ error: 'You must be signed in to use Veyro AI.' }, 401);
+    return jsonResponse({ error: 'You must be signed in to use Ascned AI.' }, 401);
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -188,7 +188,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse(
       {
         error:
-          'Veyro AI is not configured on the server yet. Add the AI_API_KEY secret to your Supabase project and deploy the ai-chat function.',
+          'Ascned AI is not configured on the server yet. Add the AI_API_KEY secret to your Supabase project and deploy the ai-chat function.',
       },
       503
     );
@@ -608,7 +608,7 @@ Deno.serve(async (req: Request) => {
         if (!closed) {
           try {
             send('error', {
-              message: 'Something went wrong while contacting Veyro AI. Please try again.',
+              message: 'Something went wrong while contacting Ascned AI. Please try again.',
               retryable: true,
             });
           } catch {

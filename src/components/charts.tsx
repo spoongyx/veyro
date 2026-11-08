@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import type { DayStat } from '@/lib/utils/stats';
+import type { DayStat, HabitConsistencyDay } from '@/lib/utils/stats';
 import type { SeriesPoint, YearHeatmapData } from '@/lib/utils/analytics';
 import { cn } from '@/lib/utils/cn';
 
@@ -28,27 +28,54 @@ export function Heatmap({
   weeks,
   color,
   className,
+  onToggleDay,
 }: {
-  weeks: boolean[][];
+  weeks: HabitConsistencyDay[][];
   color?: string | null;
   className?: string;
+  onToggleDay?: (dateKey: string) => void;
 }) {
   const doneFill = usableColor(color) ?? 'rgb(var(--heat-3))';
   return (
     <div className={cn('flex gap-[3px]', className)} aria-label="Habit completion heatmap">
       {weeks.map((week, weekIndex) => (
         <div key={weekIndex} className="flex flex-1 flex-col gap-[3px]">
-          {week.map((done, dayIndex) => (
-            <div
-              key={dayIndex}
-              className="animate-heatIn aspect-square w-full rounded-[3px] transition-transform duration-150 hover:scale-125"
-              style={{
-                backgroundColor: done ? doneFill : heatFill(0),
-                animationDelay: `${Math.min(600, (weekIndex * 7 + dayIndex) * 8)}ms`,
-              }}
-              title={done ? 'Completed' : 'Not completed'}
-            />
-          ))}
+          {week.map((cell, dayIndex) => {
+            const animationDelay = `${Math.min(600, (weekIndex * 7 + dayIndex) * 8)}ms`;
+            const dateLabel = new Date(`${cell.dateKey}T00:00:00`).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            });
+            const status = cell.done ? 'Completed' : 'Not completed';
+            const style = {
+              backgroundColor: cell.done ? doneFill : heatFill(0),
+              animationDelay,
+            };
+
+            if (!onToggleDay || !cell.inRange) {
+              return (
+                <div
+                  key={cell.dateKey}
+                  className="animate-heatIn aspect-square w-full rounded-[3px] transition-transform duration-150 hover:scale-125"
+                  style={style}
+                  title={`${dateLabel} · ${cell.inRange ? status : 'Future'}`}
+                />
+              );
+            }
+
+            return (
+              <button
+                key={cell.dateKey}
+                type="button"
+                onClick={() => onToggleDay(cell.dateKey)}
+                className="animate-heatIn aspect-square w-full cursor-pointer rounded-[3px] transition-transform duration-150 hover:scale-125 hover:ring-1 hover:ring-accent/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                style={style}
+                title={`${dateLabel} · ${status} · Click to ${cell.done ? 'uncheck' : 'check'}`}
+                aria-label={`${dateLabel}: ${status.toLowerCase()}. Click to ${cell.done ? 'uncheck' : 'check'}.`}
+              />
+            );
+          })}
         </div>
       ))}
     </div>

@@ -99,10 +99,10 @@ const markdownComponents: Components = {
 function friendlyError(error: unknown): string {
   const raw = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
   if (/could not find the table|relation .* does not exist|schema cache/i.test(raw)) {
-    return 'Veyro AI is not set up yet: its database tables are missing. Run the AI migration in Supabase, then reload this page.';
+    return 'Ascned AI is not set up yet: its database tables are missing. Run the AI migration in Supabase, then reload this page.';
   }
   if (raw === 'Failed to fetch' || raw.includes('NetworkError')) {
-    return 'Could not reach Veyro AI. Check your connection and try again.';
+    return 'Could not reach Ascned AI. Check your connection and try again.';
   }
   return raw;
 }
@@ -727,7 +727,7 @@ export default function AiPage() {
             </div>
             <div className="border-t border-line/70 p-3">
               <p className="text-[10px] leading-4 text-muted">
-                Veyro AI only sees your own workspace data and asks before making changes.
+                Ascned AI only sees your own workspace data and asks before making changes.
               </p>
             </div>
           </aside>
@@ -739,7 +739,7 @@ export default function AiPage() {
                   <Sparkles size={17} />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold tracking-tight text-text">Veyro AI</p>
+                  <p className="truncate text-sm font-semibold tracking-tight text-text">Ascned AI</p>
                   <p className="hidden truncate text-[11px] text-muted sm:block">
                     Context-aware assistant for your tasks, habits and goals
                   </p>
@@ -782,7 +782,7 @@ export default function AiPage() {
                       </h2>
                       <p className="mt-1.5 max-w-md text-sm leading-6 text-muted">
                         Ask about your day, plan your week, or create tasks and habits. I use your live
-                        Veyro data and ask before changing anything.
+                        Ascned data and ask before changing anything.
                       </p>
 
                       {setupMessage ? (
@@ -860,7 +860,7 @@ export default function AiPage() {
                   rows={1}
                   maxLength={4000}
                   placeholder="Ask about your tasks, habits or goals…"
-                  aria-label="Message Veyro AI"
+                  aria-label="Message Ascned AI"
                   className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2.5 py-2 text-base text-text outline-none placeholder:text-muted/70 sm:text-sm"
                 />
                 {sending ? (
@@ -886,7 +886,7 @@ export default function AiPage() {
                 )}
               </form>
               <p className="mt-2 text-center text-[10px] leading-4 text-muted">
-                Veyro AI can propose changes to your workspace. Nothing is saved until you confirm.
+                Ascned AI can propose changes to your workspace. Nothing is saved until you confirm.
               </p>
             </div>
           </section>

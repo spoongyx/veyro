@@ -7,7 +7,7 @@ function sb() {
 
 function notifyTasksChanged() {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('veyro:tasks-changed'));
+    window.dispatchEvent(new Event('ascned:tasks-changed'));
   }
 }
 

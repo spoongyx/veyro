@@ -1,18 +1,17 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { BrandMark, BrandVersion } from '@/components/brand';
 
 export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="min-h-screen min-h-dvh bg-ink text-text">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-4 pb-5 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6">
-        <Link href="/" aria-label="Veyro home" className="flex items-center gap-2.5">
-          <span
-            aria-hidden="true"
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-contrast"
-          >
-            V
+        <Link href="/" aria-label="Ascned home" className="flex items-center gap-2.5">
+          <BrandMark className="h-8 w-8" priority />
+          <span className="flex items-center gap-1.5">
+            <span className="text-xl font-bold tracking-tight">Ascned</span>
+            <BrandVersion />
           </span>
-          <span className="text-xl font-bold tracking-tight">Veyro</span>
         </Link>
         <Link href="/" className="text-sm font-medium text-muted transition-colors hover:text-text">
           Back to home
@@ -29,7 +28,7 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-8 text-sm text-muted sm:flex-row sm:px-6">
-          <p>Veyro</p>
+          <p>Ascned</p>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="transition-colors hover:text-text">
               Privacy

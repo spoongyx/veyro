@@ -157,7 +157,7 @@ function ProfileCard() {
       <SectionHeading
         icon={<UserRound size={17} />}
         title="Profile"
-        description="Your username and picture appear across Veyro."
+        description="Your username and picture appear across Ascned."
       />
       <form onSubmit={handleSave} className="mt-5 space-y-5">
         <div className="flex flex-wrap items-center gap-4">
@@ -310,7 +310,7 @@ export default function SettingsPage() {
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-text">
-                  {profile?.username ?? user?.email ?? 'Veyro member'}
+                  {profile?.username ?? user?.email ?? 'Ascned member'}
                 </p>
                 <p className="mt-0.5 text-xs text-muted">
                   Member since{' '}
@@ -381,7 +381,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between gap-5 py-4 first:pt-0">
               <div>
                 <p className="text-sm font-medium text-text">Task reminders</p>
-                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due (Veyro must be open). Turn off to silence all task reminders.</p>
+                <p className="mt-0.5 text-xs leading-5 text-muted">A browser alert when a task reminder is due (Ascned must be open). Turn off to silence all task reminders.</p>
               </div>
               <Toggle
                 checked={settings.reminders}
@@ -431,7 +431,7 @@ export default function SettingsPage() {
           <SectionHeading
             icon={<Wifi size={17} />}
             title="Install & offline"
-            description="Add Veyro to your home screen and keep working when the signal drops."
+            description="Add Ascned to your home screen and keep working when the signal drops."
           />
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <InstallButton />

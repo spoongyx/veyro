@@ -1,4 +1,4 @@
--- Veyro profiles: unique usernames, avatars, and onboarding support.
+-- Ascned profiles: unique usernames, avatars, and onboarding support.
 -- Safe to re-run: only creates missing objects and recreates its own policies.
 --
 -- Rollback:

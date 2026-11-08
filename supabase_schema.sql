@@ -1,4 +1,4 @@
--- Veyro Database Schema for Supabase
+-- Ascned Database Schema for Supabase
 
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

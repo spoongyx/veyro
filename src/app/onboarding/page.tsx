@@ -151,7 +151,7 @@ export default function OnboardingPage() {
 
   return (
     <AuthShell
-      subtitle="One last step to make Veyro yours."
+      subtitle="One last step to make Ascned yours."
       footer={
         <button
           type="button"
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
               availability === 'taken'
             }
           >
-            Continue to Veyro
+            Continue to Ascned
           </Button>
         </form>
       </Card>

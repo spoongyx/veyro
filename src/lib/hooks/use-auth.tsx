@@ -99,7 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const keys = await window.caches.keys();
         await Promise.all(
-          keys.filter((key) => key.startsWith('veyro-')).map((key) => window.caches.delete(key))
+          keys
+            .filter((key) => key.startsWith('ascned-') || key.startsWith('veyro-'))
+            .map((key) => window.caches.delete(key))
         );
       } catch {
         // Cache Storage unavailable — nothing to clear.

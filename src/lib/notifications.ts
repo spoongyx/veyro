@@ -2,7 +2,8 @@ import type { AppNotificationSettings, Task } from '@/lib/types';
 
 export type NotificationPermission = 'default' | 'granted' | 'denied' | 'unsupported';
 
-const SETTINGS_KEY = 'veyro-notif-settings';
+const SETTINGS_KEY = 'ascned-notif-settings';
+const LEGACY_SETTINGS_KEY = 'veyro-notif-settings';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: AppNotificationSettings = {
   reminders: true,
@@ -13,7 +14,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS: AppNotificationSettings = {
 export function loadNotificationSettings(): AppNotificationSettings {
   if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_SETTINGS;
   try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    const raw =
+      window.localStorage.getItem(SETTINGS_KEY) ?? window.localStorage.getItem(LEGACY_SETTINGS_KEY);
     if (raw) return { ...DEFAULT_NOTIFICATION_SETTINGS, ...JSON.parse(raw) };
   } catch {
     // ignore
@@ -76,12 +78,14 @@ export async function showAppNotification(title: string, options?: { body?: stri
   }
 }
 
-const NOTIFIED_KEY = 'veyro-notified-reminders-v2';
+const NOTIFIED_KEY = 'ascned-notified-reminders-v2';
+const LEGACY_NOTIFIED_KEY = 'veyro-notified-reminders-v2';
 
 export function getNotifiedReminderKeys(): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = window.localStorage.getItem(NOTIFIED_KEY);
+    const raw =
+      window.localStorage.getItem(NOTIFIED_KEY) ?? window.localStorage.getItem(LEGACY_NOTIFIED_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {

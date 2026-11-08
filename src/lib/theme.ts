@@ -1,9 +1,11 @@
 export type Theme = 'light' | 'midnight';
 
 export const DEFAULT_THEME: Theme = 'midnight';
-export const THEME_STORAGE_KEY = 'veyro-theme';
-export const THEME_COOKIE = 'veyro-theme';
-export const THEME_PENDING_KEY = 'veyro-theme-pending';
+export const THEME_STORAGE_KEY = 'ascned-theme';
+export const THEME_COOKIE = 'ascned-theme';
+export const THEME_PENDING_KEY = 'ascned-theme-pending';
+const LEGACY_THEME_STORAGE_KEY = 'veyro-theme';
+const LEGACY_THEME_COOKIE = 'veyro-theme';
 
 export const THEME_META: Record<
   Theme,
@@ -40,7 +42,9 @@ export function themeFromUser(user: unknown): Theme | null {
 
 export function readThemeCookie(): Theme | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${THEME_COOKIE}=([^;]*)`));
+  const match =
+    document.cookie.match(new RegExp(`(?:^|; )${THEME_COOKIE}=([^;]*)`)) ??
+    document.cookie.match(new RegExp(`(?:^|; )${LEGACY_THEME_COOKIE}=([^;]*)`));
   if (!match) return null;
   try {
     return normalizeTheme(decodeURIComponent(match[1]));
@@ -54,6 +58,11 @@ export function getStoredTheme(): Theme {
   try {
     const local = normalizeTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
     if (local) return local;
+    const legacy = normalizeTheme(window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY));
+    if (legacy) {
+      window.localStorage.setItem(THEME_STORAGE_KEY, legacy);
+      return legacy;
+    }
   } catch {
     // localStorage may be unavailable; fall through to the cookie.
   }

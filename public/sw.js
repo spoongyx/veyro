@@ -1,8 +1,8 @@
-// Veyro service worker — offline shell + stale-while-revalidate runtime caching.
+// Ascned service worker — offline shell + stale-while-revalidate runtime caching.
 // Authenticated routes (/app, /auth) are never cached: caching them would leave
 // private user data readable on a shared device after logout.
-const SHELL_CACHE = 'veyro-shell-v2';
-const RUNTIME_CACHE = 'veyro-runtime-v2';
+const SHELL_CACHE = 'ascned-shell-v2';
+const RUNTIME_CACHE = 'ascned-runtime-v2';
 const OFFLINE_URL = '/offline';
 const PRIVATE_PREFIXES = ['/app', '/auth'];
 
@@ -50,7 +50,7 @@ self.addEventListener('activate', (event) => {
         const keep = new Set([SHELL_CACHE, RUNTIME_CACHE]);
         return Promise.all(
           keys
-            .filter((key) => key.startsWith('veyro-') && !keep.has(key))
+            .filter((key) => (key.startsWith('ascned-') || key.startsWith('veyro-')) && !keep.has(key))
             .map((key) => caches.delete(key))
         );
       })

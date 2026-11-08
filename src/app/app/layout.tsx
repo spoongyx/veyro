@@ -13,5 +13,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 export const metadata = {
-  title: 'Veyro',
+  title: 'Ascned',
 };

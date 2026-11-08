@@ -1,4 +1,4 @@
--- Veyro AI chat: conversations, messages, and row level security.
+-- Ascned AI chat: conversations, messages, and row level security.
 -- Safe to re-run: only creates missing objects and recreates its own policies.
 --
 -- Rollback:

@@ -61,7 +61,7 @@ export default function ReminderWatcher() {
 
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
-    window.addEventListener('veyro:tasks-changed', onTasksChanged);
+    window.addEventListener('ascned:tasks-changed', onTasksChanged);
 
     return () => {
       disposed = true;
@@ -69,7 +69,7 @@ export default function ReminderWatcher() {
       window.clearInterval(refreshTimer);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
-      window.removeEventListener('veyro:tasks-changed', onTasksChanged);
+      window.removeEventListener('ascned:tasks-changed', onTasksChanged);
     };
   }, [user?.id]);
 

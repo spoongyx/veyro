@@ -3,7 +3,7 @@ export default function OfflinePage() {
     <div className="flex min-h-screen min-h-dvh flex-col items-center justify-center bg-ink px-6 py-[calc(2rem+env(safe-area-inset-top))] text-center">
       <h1 className="text-2xl font-bold text-text">You&apos;re offline</h1>
       <p className="mt-2 max-w-md text-sm text-muted">
-        Veyro is still loading your last saved workspace. Changes will sync automatically once you reconnect.
+        Ascned is still loading your last saved workspace. Changes will sync automatically once you reconnect.
       </p>
     </div>
   );
